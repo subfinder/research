@@ -161,3 +161,11 @@ func ExampleResult_Print() {
 	result.Print()
 	// Output: Type: example Success: ex.ample.com
 }
+
+func ExampleResult_JSON() {
+	result := NewResult("example", "ex.ample.com", nil)
+	result.Timestamp = time.Time{} // set default timestamp
+	bytes, _ := result.JSON()
+	fmt.Println(string(bytes))
+	// Output: {"Timestamp":"0001-01-01T00:00:00Z","Type":"example","Success":"ex.ample.com","Failure":null}
+}
