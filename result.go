@@ -11,6 +11,15 @@ type Result struct {
 	Failure error
 }
 
+// NewResult wraps up the creation of a new Result.
+func NewResult(t string, s interface{}, f error) *Result {
+	return &Result{
+		Type:    t,
+		Success: s,
+		Failure: f,
+	}
+}
+
 // IsSuccess checks if the Result has any failure before
 // determining if the result succeeded.
 func (r *Result) IsSuccess() bool {
