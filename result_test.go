@@ -8,11 +8,11 @@ import "reflect"
 
 func TestResult(t *testing.T) {
 	var units = []struct {
-		exp Result
+		exp *Result
 		got string
 	}{
-		{Result{Type: "example", Success: "info.bing.com"}, "info.bing.com"},
-		{Result{Type: "example", Failure: errors.New("failed")}, "failed"},
+		{&Result{Type: "example", Success: "info.bing.com"}, "info.bing.com"},
+		{&Result{Type: "example", Failure: errors.New("failed")}, "failed"},
 	}
 	for _, u := range units {
 		if u.exp.Failure != nil {
@@ -45,11 +45,11 @@ func TestNewResult(t *testing.T) {
 
 func TestResultIsSuccess(t *testing.T) {
 	var units = []struct {
-		exp Result
+		exp *Result
 		got bool
 	}{
-		{Result{Type: "example", Success: "info.bing.com"}, true},
-		{Result{Type: "example", Failure: errors.New("failed")}, false},
+		{&Result{Type: "example", Success: "info.bing.com"}, true},
+		{&Result{Type: "example", Failure: errors.New("failed")}, false},
 	}
 	for _, u := range units {
 		if u.exp.IsSuccess() != u.got {
@@ -60,11 +60,11 @@ func TestResultIsSuccess(t *testing.T) {
 
 func TestResultIsFailure(t *testing.T) {
 	var units = []struct {
-		exp Result
+		exp *Result
 		got bool
 	}{
-		{Result{Type: "example", Success: "info.bing.com"}, false},
-		{Result{Type: "example", Failure: errors.New("failed")}, true},
+		{&Result{Type: "example", Success: "info.bing.com"}, false},
+		{&Result{Type: "example", Failure: errors.New("failed")}, true},
 	}
 	for _, u := range units {
 		if u.exp.IsFailure() != u.got {
@@ -75,12 +75,12 @@ func TestResultIsFailure(t *testing.T) {
 
 func TestResultHasType(t *testing.T) {
 	var units = []struct {
-		exp Result
+		exp *Result
 		got bool
 	}{
-		{Result{Type: "example", Success: "info.bing.com"}, true},
-		{Result{Type: "example", Failure: errors.New("failed")}, true},
-		{Result{}, false},
+		{&Result{Type: "example", Success: "info.bing.com"}, true},
+		{&Result{Type: "example", Failure: errors.New("failed")}, true},
+		{&Result{}, false},
 	}
 	for _, u := range units {
 		if u.exp.HasType() != u.got {
