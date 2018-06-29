@@ -1,8 +1,13 @@
 # Subzero
-❄️  Work-in-progress development of the _cool_ new SubFinder core API `V2`
+❄️  Research project for the development of [SubFinder](https://github.com/subfinder/subfinder) core API `v2`
 
 # Why?
-`V1` of SubFinder's core API is actually not that bad. However, I decided I would try and re-work the design to attempt to improve it. The main motivating factor being to simplify the boilerplate to add new subdomain enumeration sources and utilize the `interface` type in golang.
+That's a great question! Hopefully these reasons will make sense:
+
+* Reduce boilerplate code needed to add or develop new sudomain `Sources`
+* Utilize the [`interface`](https://gobyexample.com/interfaces) type in golang to define our internal API semantics.
+* Provide tests and examples of all its functionality.
+* Ensure a solid foundation for future tools to be built upon (CLI, HTTP/REST API)
 
 # How can I help?
 Make an issue or pull request to this repository to improve it!
