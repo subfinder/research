@@ -3,6 +3,7 @@ package subzero
 import "testing"
 import "fmt"
 import "errors"
+import "time"
 import "reflect"
 
 func TestResult(t *testing.T) {
@@ -35,6 +36,7 @@ func TestNewResult(t *testing.T) {
 		{&Result{Type: "example", Failure: errors.New("failed")}, NewResult("example", nil, errors.New("failed"))},
 	}
 	for _, u := range units {
+		u.got.Timestamp = time.Time{} // ensure this isn't the reason for failure
 		if !reflect.DeepEqual(u.exp, u.got) {
 			t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
 		}
@@ -136,4 +138,24 @@ func ExampleResult_HasTimestamp() {
 	result := Result{} // no Timestamp set
 	fmt.Println(result.HasTimestamp())
 	// Output: false
+}
+
+func ExampleResult_Printable() {
+	result := NewResult("example", "ex.ample.com", nil)
+	printable := result.Printable()
+	fmt.Println(printable)
+}
+
+func ExampleResult_IsPrintable() {
+	result := NewResult("example", "ex.ample.com", nil)
+	ok, _ := result.IsPrintable()
+	fmt.Println(ok)
+	// Output: true
+}
+
+func ExampleResult_Print() {
+	result := NewResult("example", "ex.ample.com", nil)
+	result.Timestamp = time.Time{} // set default timestamp
+	result.Print()
+	// Output: Type: example Success: ex.ample.com
 }
