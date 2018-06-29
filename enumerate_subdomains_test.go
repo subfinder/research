@@ -34,7 +34,7 @@ func TestEnumerateSubdomains(t *testing.T) {
 
 	collectedResults := []string{}
 	for result := range EnumerateSubdomains(domain, options) {
-		collectedResults = append(collectedResults, result.Success)
+		collectedResults = append(collectedResults, result.Success.(string))
 	}
 
 	if len(collectedResults) != 6 {
