@@ -26,6 +26,21 @@ func TestResult(t *testing.T) {
 	}
 }
 
+func TestNewResult(t *testing.T) {
+	var units = []struct {
+		exp *Result
+		got *Result
+	}{
+		{&Result{Type: "example", Success: "info.bing.com"}, NewResult("example", "info.bing.com", nil)},
+		{&Result{Type: "example", Failure: errors.New("failed")}, NewResult("example", nil, errors.New("failed"))},
+	}
+	for _, u := range units {
+		if !reflect.DeepEqual(u.exp, u.got) {
+			t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
+		}
+	}
+}
+
 func TestResultIsSuccess(t *testing.T) {
 	var units = []struct {
 		exp Result
@@ -80,6 +95,19 @@ func ExampleResult() {
 		fmt.Println(result.Type, ":", result.Success)
 	}
 	// Output: example : info.bing.com
+}
+
+func ExampleNewResult() {
+	result := NewResult("example", "info.google.com", nil)
+
+	if result.IsFailure() {
+		fmt.Println(result.Failure.Error())
+	} else {
+		if result.Success.(string) == "info.google.com" {
+			fmt.Println("found example in success")
+		}
+	}
+	// Output: found example in success
 }
 
 func ExampleResult_IsSuccess() {
