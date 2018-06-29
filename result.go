@@ -5,6 +5,7 @@ import "bytes"
 import "errors"
 import "fmt"
 import "time"
+import "encoding/json"
 
 // Result contains the information from any given
 // source. It's the Source author's job to set the
@@ -115,4 +116,11 @@ func (r *Result) Print() error {
 		return nil
 	}
 	return errors.New("unable to print unprintable result")
+}
+
+// JSON returns the Result as a JSON object within a slice of bytes.
+func (r *Result) JSON() ([]byte, error) {
+	r.RLock()
+	defer r.RUnlock()
+	return json.Marshal(r)
 }
