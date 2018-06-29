@@ -102,9 +102,8 @@ func (r *Result) IsPrintable() (bool, string) {
 	printable := r.Printable()
 	if len(printable) > 0 {
 		return true, printable
-	} else {
-		return false, ""
 	}
+	return false, ""
 }
 
 // Print will print the Printable version of the Result to the screen or return an error
@@ -114,7 +113,6 @@ func (r *Result) Print() error {
 	if ok {
 		fmt.Println(printable)
 		return nil
-	} else {
-		return errors.New("unable to print unprintable result")
 	}
+	return errors.New("unable to print unprintable result")
 }
