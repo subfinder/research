@@ -142,8 +142,10 @@ func ExampleResult_HasTimestamp() {
 
 func ExampleResult_Printable() {
 	result := NewResult("example", "ex.ample.com", nil)
+	result.Timestamp = time.Time{} // set default timestamp
 	printable := result.Printable()
 	fmt.Println(printable)
+	// Output: Type: example Success: ex.ample.com
 }
 
 func ExampleResult_IsPrintable() {
