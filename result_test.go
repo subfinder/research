@@ -131,3 +131,9 @@ func ExampleResult_HasType() {
 	fmt.Println(result.HasType())
 	// Output: true
 }
+
+func ExampleResult_HasTimestamp() {
+	result := Result{} // no Timestamp set
+	fmt.Println(result.HasTimestamp())
+	// Output: false
+}
