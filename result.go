@@ -7,7 +7,7 @@ package subzero
 // subdomain. Upon Failure, the source should provide an error.
 type Result struct {
 	Type    string
-	Success string
+	Success interface{}
 	Failure error
 }
 
