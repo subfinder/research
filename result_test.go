@@ -425,3 +425,11 @@ func ExampleResult_SetType() {
 	fmt.Println(result.Type)
 	// Output: google
 }
+
+func ExampleResult_SetTimestamp() {
+	result := NewResult("bing", "info.bing.com", nil)
+	newTimestamp := time.Now().UTC()
+	result.SetTimestamp(newTimestamp)
+	fmt.Println(result.Timestamp == newTimestamp)
+	// Output: true
+}
