@@ -448,3 +448,16 @@ func ExampleResult_GetFailure() {
 	fmt.Println(result.Failure)
 	// Output: whoa there!
 }
+
+func ExampleResult_SetFailure() {
+	McErr := errors.New("whoa there!")
+	result := NewResult("thisis", "totally.fine.com", nil)
+	result.SetFailure(McErr)
+	if result.IsFailure() {
+		fmt.Println(result.Failure, "we found our failure!")
+	}
+	if result.IsSuccess() {
+		fmt.Println("this will never print because the failure was set")
+	}
+	// Output: whoa there! we found our failure!
+}
