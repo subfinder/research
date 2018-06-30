@@ -104,6 +104,24 @@ func TestResult_HasTimestamp(t *testing.T) {
 	}
 }
 
+func TestResult_Printable(t *testing.T) {
+	var units = []struct {
+		got *Result
+		exp string
+	}{
+		{&Result{}, ""},
+		{NewResult("", "", nil), "Success:"},
+		{NewResult("example", "", nil), "Type: example Success:"},
+		{NewResult("example", "a.b.com", nil), "Type: example Success: a.b.com"},
+	}
+	for _, u := range units {
+		u.got.Timestamp = time.Time{} // ensure this isn't the reason for failure
+		if u.got.Printable() != u.exp {
+			t.Fatalf("expected '%v', got '%v'", u.exp, u.got.Printable())
+		}
+	}
+}
+
 func ExampleResult() {
 	result := Result{Type: "example", Success: "info.bing.com"}
 	if result.Failure != nil {
