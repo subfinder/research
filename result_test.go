@@ -418,3 +418,10 @@ func ExampleResult_GetType() {
 	fmt.Println(t)
 	// Output: bing
 }
+
+func ExampleResult_SetType() {
+	result := NewResult("bing", "info.bing.com", nil)
+	result.SetType("google")
+	fmt.Println(result.Type)
+	// Output: google
+}
