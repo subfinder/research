@@ -8,19 +8,19 @@ import "reflect"
 
 func TestResult(t *testing.T) {
 	var units = []struct {
-		exp *Result
-		got string
+		got *Result
+		exp string
 	}{
 		{&Result{Type: "example", Success: "info.bing.com"}, "info.bing.com"},
 		{&Result{Type: "example", Failure: errors.New("failed")}, "failed"},
 	}
 	for _, u := range units {
-		if u.exp.Failure != nil {
-			if !reflect.DeepEqual(u.exp.Failure.Error(), u.got) {
+		if u.got.Failure != nil {
+			if !reflect.DeepEqual(u.got.Failure.Error(), u.exp) {
 				t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
 			}
 		} else {
-			if !reflect.DeepEqual(u.exp.Success, u.got) {
+			if !reflect.DeepEqual(u.got.Success, u.exp) {
 				t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
 			}
 		}
@@ -29,11 +29,11 @@ func TestResult(t *testing.T) {
 
 func TestNewResult(t *testing.T) {
 	var units = []struct {
-		exp *Result
 		got *Result
+		exp *Result
 	}{
-		{&Result{Type: "example", Success: "info.bing.com"}, NewResult("example", "info.bing.com", nil)},
-		{&Result{Type: "example", Failure: errors.New("failed")}, NewResult("example", nil, errors.New("failed"))},
+		{NewResult("example", "info.bing.com", nil), &Result{Type: "example", Success: "info.bing.com"}},
+		{NewResult("example", nil, errors.New("failed")), &Result{Type: "example", Failure: errors.New("failed")}},
 	}
 	for _, u := range units {
 		u.got.Timestamp = time.Time{} // ensure this isn't the reason for failure
@@ -45,14 +45,14 @@ func TestNewResult(t *testing.T) {
 
 func TestResult_IsSuccess(t *testing.T) {
 	var units = []struct {
-		exp *Result
-		got bool
+		got *Result
+		exp bool
 	}{
 		{&Result{Type: "example", Success: "info.bing.com"}, true},
 		{&Result{Type: "example", Failure: errors.New("failed")}, false},
 	}
 	for _, u := range units {
-		if u.exp.IsSuccess() != u.got {
+		if u.got.IsSuccess() != u.exp {
 			t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
 		}
 	}
@@ -60,14 +60,14 @@ func TestResult_IsSuccess(t *testing.T) {
 
 func TestResult_IsFailure(t *testing.T) {
 	var units = []struct {
-		exp *Result
-		got bool
+		got *Result
+		exp bool
 	}{
 		{&Result{Type: "example", Success: "info.bing.com"}, false},
 		{&Result{Type: "example", Failure: errors.New("failed")}, true},
 	}
 	for _, u := range units {
-		if u.exp.IsFailure() != u.got {
+		if u.got.IsFailure() != u.exp {
 			t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
 		}
 	}
@@ -75,15 +75,15 @@ func TestResult_IsFailure(t *testing.T) {
 
 func TestResult_HasType(t *testing.T) {
 	var units = []struct {
-		exp *Result
-		got bool
+		got *Result
+		exp bool
 	}{
 		{&Result{Type: "example", Success: "info.bing.com"}, true},
 		{&Result{Type: "example", Failure: errors.New("failed")}, true},
 		{&Result{}, false},
 	}
 	for _, u := range units {
-		if u.exp.HasType() != u.got {
+		if u.got.HasType() != u.exp {
 			t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
 		}
 	}
@@ -91,14 +91,14 @@ func TestResult_HasType(t *testing.T) {
 
 func TestResult_HasTimestamp(t *testing.T) {
 	var units = []struct {
-		exp *Result
-		got bool
+		got *Result
+		exp bool
 	}{
 		{&Result{}, false},
 		{NewResult("", "", nil), true},
 	}
 	for _, u := range units {
-		if u.exp.HasTimestamp() != u.got {
+		if u.got.HasTimestamp() != u.exp {
 			t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
 		}
 	}
