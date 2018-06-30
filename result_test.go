@@ -433,3 +433,11 @@ func ExampleResult_SetTimestamp() {
 	fmt.Println(result.Timestamp == newTimestamp)
 	// Output: true
 }
+
+func ExampleResult_GetTimestamp() {
+	result := NewResult("bing", "info.bing.com", nil)
+	newTimestamp := time.Now().UTC()
+	result.Timestamp = newTimestamp
+	fmt.Println(result.GetTimestamp() == newTimestamp)
+	// Output: true
+}
