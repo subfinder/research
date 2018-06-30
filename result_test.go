@@ -263,6 +263,26 @@ func TestResult_GetFailure(t *testing.T) {
 	}
 }
 
+func TestResult_SetFailure(t *testing.T) {
+	ex := errors.New("oh man")
+	var units = []struct {
+		got *Result
+		exp error
+	}{
+		{NewResult("lol", "", nil), ex},
+		{NewResult("lol", "", nil), nil},
+		{NewResult("lol", "", ex), errors.New("new error")},
+		{NewResult("lol", "", ex), nil},
+		{NewResult("lol", "", errors.New("anouther one!")), nil},
+	}
+	for _, u := range units {
+		u.got.SetFailure(u.exp)
+		if u.got.Failure != u.exp {
+			t.Fatalf("expected '%v', got '%v'", u.exp, u.got.Failure)
+		}
+	}
+}
+
 func ExampleResult() {
 	result := Result{Type: "example", Success: "info.bing.com"}
 	if result.Failure != nil {
