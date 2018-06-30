@@ -406,8 +406,8 @@ func ExampleResult_SetSuccess() {
 }
 
 func ExampleResult_GetSuccess() {
-	result := NewResult("", "info.bing.com", nil)
-	success := result.GetSuccess()
-	fmt.Println(success)
+	result := NewResult("bing", "info.bing.com", nil)
+	s := result.GetSuccess()
+	fmt.Println(s)
 	// Output: info.bing.com
 }
