@@ -441,3 +441,10 @@ func ExampleResult_GetTimestamp() {
 	fmt.Println(result.GetTimestamp() == newTimestamp)
 	// Output: true
 }
+
+func ExampleResult_GetFailure() {
+	McErr := errors.New("whoa there!")
+	result := NewResult("", nil, McErr)
+	fmt.Println(result.Failure)
+	// Output: whoa there!
+}
