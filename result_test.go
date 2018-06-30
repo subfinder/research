@@ -226,6 +226,27 @@ func TestResult_GetType(t *testing.T) {
 	}
 }
 
+func TestResult_SetType(t *testing.T) {
+	var units = []struct {
+		got *Result
+		exp string
+	}{
+		{NewResult("lol", "", nil), "lol"},
+		{NewResult("", "", nil), ""},
+		{NewResult("", "", nil), "lol"},
+		{&Result{}, ""},
+		{&Result{Type: "cats"}, "cats"},
+		{&Result{Type: "dogs"}, "cats"},
+		{&Result{Type: ""}, ""},
+	}
+	for _, u := range units {
+		u.got.SetType(u.exp)
+		if u.got.Type != u.exp {
+			t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
+		}
+	}
+}
+
 func ExampleResult() {
 	result := Result{Type: "example", Success: "info.bing.com"}
 	if result.Failure != nil {
