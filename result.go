@@ -5,6 +5,7 @@ import "bytes"
 import "errors"
 import "fmt"
 import "time"
+import "strings"
 import "encoding/json"
 
 // Result contains the information from any given
@@ -36,6 +37,10 @@ func (r *Result) IsSuccess() bool {
 	r.RLock()
 	defer r.RUnlock()
 	if r.Failure != nil {
+		return false
+	}
+	// don't give us any of your bullshit, empty interfaces
+	if fmt.Sprintf("%v", r.Success) == "<nil>" {
 		return false
 	}
 	return true
@@ -91,11 +96,13 @@ func (r *Result) Printable() string {
 
 	if r.IsSuccess() {
 		buffer.WriteString(fmt.Sprintf(" Success: %v", r.Success))
-	} else {
+	}
+
+	if r.IsFailure() {
 		buffer.WriteString(fmt.Sprintf(" Failure: %v", r.Failure))
 	}
 
-	return buffer.String()
+	return strings.TrimSpace(buffer.String())
 }
 
 // IsPrintable checks if the underlying Result has any printable information.
