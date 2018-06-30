@@ -79,6 +79,14 @@ func (r *Result) GetType() string {
 	return r.Type
 }
 
+// SetTimestamp safely sets a new type value for a Result
+// which could be shared by multiple go routines.
+func (r *Result) SetTimestamp(t time.Time) {
+	r.Lock()
+	defer r.Unlock()
+	r.Timestamp = t
+}
+
 // IsSuccess checks if the Result has any failure, or
 // that the Success interface{} has actually been filled
 // before determining if the result succeeded.
