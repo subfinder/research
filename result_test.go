@@ -110,6 +110,8 @@ func TestResult_Printable(t *testing.T) {
 		exp string
 	}{
 		{&Result{}, ""},
+		{&Result{Success: nil}, ""},
+		{&Result{Failure: nil}, ""},
 		{NewResult("", "", nil), "Success:"},
 		{NewResult("example", "", nil), "Type: example Success:"},
 		{NewResult("example", "a.b.com", nil), "Type: example Success: a.b.com"},
@@ -128,6 +130,8 @@ func TestResult_IsPrintable(t *testing.T) {
 		exp bool
 	}{
 		{&Result{}, false},
+		{&Result{Success: nil}, false},
+		{&Result{Failure: nil}, false},
 		{NewResult("", "", nil), true},
 		{NewResult("example", "", nil), true},
 		{NewResult("example", "a.b.com", nil), true},
@@ -148,6 +152,8 @@ func TestResult_JSON(t *testing.T) {
 		exp string
 	}{
 		{&Result{}, `{"Timestamp":"0001-01-01T00:00:00Z","Type":"","Success":null,"Failure":null}`},
+		{&Result{Success: nil}, `{"Timestamp":"0001-01-01T00:00:00Z","Type":"","Success":null,"Failure":null}`},
+		{&Result{Failure: nil}, `{"Timestamp":"0001-01-01T00:00:00Z","Type":"","Success":null,"Failure":null}`},
 		{NewResult("", "", nil), `{"Timestamp":"0001-01-01T00:00:00Z","Type":"","Success":"","Failure":null}`},
 		{NewResult("example", "", nil), `{"Timestamp":"0001-01-01T00:00:00Z","Type":"example","Success":"","Failure":null}`},
 		{NewResult("example", "a.b.com", nil), `{"Timestamp":"0001-01-01T00:00:00Z","Type":"example","Success":"a.b.com","Failure":null}`},
