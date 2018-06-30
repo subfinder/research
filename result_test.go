@@ -140,6 +140,8 @@ func TestResult_IsPrintable(t *testing.T) {
 	}
 }
 
+// TODO: func TestResult_Print(t *testing.T) {}
+
 func ExampleResult() {
 	result := Result{Type: "example", Success: "info.bing.com"}
 	if result.Failure != nil {
