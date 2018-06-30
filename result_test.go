@@ -247,6 +247,22 @@ func TestResult_SetType(t *testing.T) {
 	}
 }
 
+func TestResult_GetFailure(t *testing.T) {
+	ex := errors.New("oh man")
+	var units = []struct {
+		got *Result
+		exp error
+	}{
+		{NewResult("lol", "", ex), ex},
+		{NewResult("lol", "", nil), nil},
+	}
+	for _, u := range units {
+		if u.got.Failure != u.exp {
+			t.Fatalf("expected '%v', got '%v'", u.exp, u.got.Failure.Error())
+		}
+	}
+}
+
 func ExampleResult() {
 	result := Result{Type: "example", Success: "info.bing.com"}
 	if result.Failure != nil {
