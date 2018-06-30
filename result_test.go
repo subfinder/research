@@ -166,6 +166,48 @@ func TestResult_JSON(t *testing.T) {
 	}
 }
 
+func TestResult_SetSuccess(t *testing.T) {
+	var units = []struct {
+		got *Result
+		exp interface{}
+	}{
+		{&Result{}, ""},
+		{&Result{Success: "cats"}, "dogs"},
+		{&Result{Success: nil}, "birds"},
+	}
+	for _, u := range units {
+		u.got.Timestamp = time.Time{} // ensure this isn't the reason for failure
+		u.got.SetSuccess(u.exp)
+		if u.got.Success != u.exp {
+			t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
+		}
+		if !u.got.IsSuccess() {
+			t.Fatalf("expected '%v', to be a success", u.exp)
+		}
+	}
+}
+
+func TestResult_GetSuccess(t *testing.T) {
+	var units = []struct {
+		got *Result
+		exp interface{}
+	}{
+		{&Result{}, ""},
+		{&Result{Success: "cats"}, "dogs"},
+		{&Result{Success: nil}, "birds"},
+	}
+	for _, u := range units {
+		u.got.Timestamp = time.Time{} // ensure this isn't the reason for failure
+		u.got.SetSuccess(u.exp)
+		if u.got.GetSuccess() != u.exp {
+			t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
+		}
+		if !u.got.IsSuccess() {
+			t.Fatalf("expected '%v', to be a success", u.exp)
+		}
+	}
+}
+
 func ExampleResult() {
 	result := Result{Type: "example", Success: "info.bing.com"}
 	if result.Failure != nil {
@@ -245,4 +287,13 @@ func ExampleResult_JSON() {
 	bytes, _ := result.JSON()
 	fmt.Println(string(bytes))
 	// Output: {"Timestamp":"0001-01-01T00:00:00Z","Type":"example","Success":"ex.ample.com","Failure":null}
+}
+
+func ExampleResult_SetSuccess() {
+	result := NewResult("example", "", nil)
+	// do work, possibly in multiple go routines
+	result.SetSuccess([]string{"a.com", "b.com", "c.com"})
+	// check if success
+	fmt.Println(result.IsSuccess())
+	// Output: true
 }
