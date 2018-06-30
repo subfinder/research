@@ -63,6 +63,14 @@ func (r *Result) GetFailure() error {
 	return r.Failure
 }
 
+// SetType safely sets a new type string value for a Result
+// which could be shared by multiple go routines.
+func (r *Result) SetType(t string) {
+	r.Lock()
+	defer r.Unlock()
+	r.Type = t
+}
+
 // IsSuccess checks if the Result has any failure before
 // determining if the result succeeded.
 func (r *Result) IsSuccess() bool {
