@@ -31,6 +31,14 @@ func NewResult(t string, s interface{}, f error) *Result {
 	}
 }
 
+// SetSuccess safely sets a new success value to a Result
+// which could be shared by multiple go routines.
+func (r *Result) SetSuccess(success interface{}) {
+	r.Lock()
+	defer r.Unlock()
+	r.Success = success
+}
+
 // IsSuccess checks if the Result has any failure before
 // determining if the result succeeded.
 func (r *Result) IsSuccess() bool {
