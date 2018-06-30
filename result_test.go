@@ -142,6 +142,24 @@ func TestResult_IsPrintable(t *testing.T) {
 
 // TODO: func TestResult_Print(t *testing.T) {}
 
+func TestResult_JSON(t *testing.T) {
+	var units = []struct {
+		got *Result
+		exp string
+	}{
+		{&Result{}, `{"Timestamp":"0001-01-01T00:00:00Z","Type":"","Success":null,"Failure":null}`},
+		{NewResult("", "", nil), `{"Timestamp":"0001-01-01T00:00:00Z","Type":"","Success":"","Failure":null}`},
+		{NewResult("example", "", nil), `{"Timestamp":"0001-01-01T00:00:00Z","Type":"example","Success":"","Failure":null}`},
+		{NewResult("example", "a.b.com", nil), `{"Timestamp":"0001-01-01T00:00:00Z","Type":"example","Success":"a.b.com","Failure":null}`},
+	}
+	for _, u := range units {
+		u.got.Timestamp = time.Time{} // ensure this isn't the reason for failure
+		if bytes, _ := u.got.JSON(); string(bytes) != u.exp {
+			t.Fatalf("expected '%v', got '%v'", u.exp, string(bytes))
+		}
+	}
+}
+
 func ExampleResult() {
 	result := Result{Type: "example", Success: "info.bing.com"}
 	if result.Failure != nil {
