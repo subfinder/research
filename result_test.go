@@ -43,7 +43,7 @@ func TestNewResult(t *testing.T) {
 	}
 }
 
-func TestResultIsSuccess(t *testing.T) {
+func TestResult_IsSuccess(t *testing.T) {
 	var units = []struct {
 		exp *Result
 		got bool
@@ -58,7 +58,7 @@ func TestResultIsSuccess(t *testing.T) {
 	}
 }
 
-func TestResultIsFailure(t *testing.T) {
+func TestResult_IsFailure(t *testing.T) {
 	var units = []struct {
 		exp *Result
 		got bool
@@ -73,7 +73,7 @@ func TestResultIsFailure(t *testing.T) {
 	}
 }
 
-func TestResultHasType(t *testing.T) {
+func TestResult_HasType(t *testing.T) {
 	var units = []struct {
 		exp *Result
 		got bool
