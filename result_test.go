@@ -89,6 +89,21 @@ func TestResult_HasType(t *testing.T) {
 	}
 }
 
+func TestResult_HasTimestamp(t *testing.T) {
+	var units = []struct {
+		exp *Result
+		got bool
+	}{
+		{&Result{}, false},
+		{NewResult("", "", nil), true},
+	}
+	for _, u := range units {
+		if u.exp.HasTimestamp() != u.got {
+			t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
+		}
+	}
+}
+
 func ExampleResult() {
 	result := Result{Type: "example", Success: "info.bing.com"}
 	if result.Failure != nil {
