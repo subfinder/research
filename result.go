@@ -71,6 +71,14 @@ func (r *Result) SetType(t string) {
 	r.Type = t
 }
 
+// GetType safely gets the type string value from a Result
+// which could be shared by multiple go routines.
+func (r *Result) GetType() string {
+	r.RLock()
+	defer r.RUnlock()
+	return r.Type
+}
+
 // IsSuccess checks if the Result has any failure before
 // determining if the result succeeded.
 func (r *Result) IsSuccess() bool {
