@@ -55,6 +55,14 @@ func (r *Result) SetFailure(err error) {
 	r.Failure = err
 }
 
+// GetFailure safely sets a new error value for a Result
+// which could be shared by multiple go routines.
+func (r *Result) GetFailure() error {
+	r.RLock()
+	defer r.RUnlock()
+	return r.Failure
+}
+
 // IsSuccess checks if the Result has any failure before
 // determining if the result succeeded.
 func (r *Result) IsSuccess() bool {
