@@ -122,6 +122,24 @@ func TestResult_Printable(t *testing.T) {
 	}
 }
 
+func TestResult_IsPrintable(t *testing.T) {
+	var units = []struct {
+		got *Result
+		exp bool
+	}{
+		{&Result{}, false},
+		{NewResult("", "", nil), true},
+		{NewResult("example", "", nil), true},
+		{NewResult("example", "a.b.com", nil), true},
+	}
+	for _, u := range units {
+		u.got.Timestamp = time.Time{} // ensure this isn't the reason for failure
+		if ok, _ := u.got.IsPrintable(); ok != u.exp {
+			t.Fatalf("expected '%v', got '%v'", u.exp, u.got.Printable())
+		}
+	}
+}
+
 func ExampleResult() {
 	result := Result{Type: "example", Success: "info.bing.com"}
 	if result.Failure != nil {
