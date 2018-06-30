@@ -5,6 +5,7 @@ import "fmt"
 import "errors"
 import "time"
 import "reflect"
+import "sync"
 
 func TestResult(t *testing.T) {
 	var units = []struct {
@@ -312,6 +313,44 @@ func TestResult_SetFailure(t *testing.T) {
 		if u.got.Failure != u.exp {
 			t.Fatalf("expected '%v', got '%v'", u.exp, u.got.Failure)
 		}
+	}
+}
+
+func TestResultMultiThreadedBehavior(t *testing.T) {
+	times := []struct {
+		timeout int
+		value   string
+	}{
+		{5, "a"},
+		{3, "b"},
+		{4, "c"},
+		{4, "d"},
+		{2, "e"},
+		{3, "f"},
+	}
+	expWinner := "e" // smallest timeout
+
+	sharedResult := &Result{}
+
+	wg := sync.WaitGroup{}
+
+	for _, t := range times {
+		wg.Add(1)
+		go func(t int, v string, r *Result) {
+			defer wg.Done()
+			// Note: this is only a ok for Milliseconds, not
+			// nanoseconds in my testing.
+			time.Sleep(time.Duration(t) * time.Millisecond)
+			if !r.IsSuccess() {
+				r.SetSuccess(v)
+			}
+		}(t.timeout, t.value, sharedResult)
+	}
+
+	wg.Wait()
+
+	if sharedResult.Success != expWinner {
+		t.Fatalf("expected '%v', got '%v'", expWinner, sharedResult.Success)
 	}
 }
 
