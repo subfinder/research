@@ -411,3 +411,10 @@ func ExampleResult_GetSuccess() {
 	fmt.Println(s)
 	// Output: info.bing.com
 }
+
+func ExampleResult_GetType() {
+	result := NewResult("bing", "info.bing.com", nil)
+	t := result.GetType()
+	fmt.Println(t)
+	// Output: bing
+}
