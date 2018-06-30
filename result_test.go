@@ -404,3 +404,10 @@ func ExampleResult_SetSuccess() {
 	fmt.Println(result.IsSuccess())
 	// Output: true
 }
+
+func ExampleResult_GetSuccess() {
+	result := NewResult("", "info.bing.com", nil)
+	success := result.GetSuccess()
+	fmt.Println(success)
+	// Output: info.bing.com
+}
