@@ -31,7 +31,7 @@ func NewResult(t string, s interface{}, f error) *Result {
 	}
 }
 
-// SetSuccess safely sets a new success value to a Result
+// SetSuccess safely sets a new success value for a Result
 // which could be shared by multiple go routines.
 func (r *Result) SetSuccess(success interface{}) {
 	r.Lock()
@@ -39,7 +39,7 @@ func (r *Result) SetSuccess(success interface{}) {
 	r.Success = success
 }
 
-// GetSuccess safely gets a new success value from a Result
+// GetSuccess safely gets the success value from a Result
 // which could be shared by multiple go routines.
 func (r *Result) GetSuccess() interface{} {
 	r.RLock()
@@ -55,7 +55,7 @@ func (r *Result) SetFailure(err error) {
 	r.Failure = err
 }
 
-// GetFailure safely sets a new error value for a Result
+// GetFailure safely gets the error value from a Result
 // which could be shared by multiple go routines.
 func (r *Result) GetFailure() error {
 	r.RLock()
@@ -63,7 +63,7 @@ func (r *Result) GetFailure() error {
 	return r.Failure
 }
 
-// SetType safely sets a new type string value for a Result
+// SetType safely sets a new type value for a Result
 // which could be shared by multiple go routines.
 func (r *Result) SetType(t string) {
 	r.Lock()
@@ -71,7 +71,7 @@ func (r *Result) SetType(t string) {
 	r.Type = t
 }
 
-// GetType safely gets the type string value from a Result
+// GetType safely gets the type value from a Result
 // which could be shared by multiple go routines.
 func (r *Result) GetType() string {
 	r.RLock()
@@ -79,8 +79,9 @@ func (r *Result) GetType() string {
 	return r.Type
 }
 
-// IsSuccess checks if the Result has any failure before
-// determining if the result succeeded.
+// IsSuccess checks if the Result has any failure, or
+// that the Success interface{} has actually been filled
+// before determining if the result succeeded.
 func (r *Result) IsSuccess() bool {
 	r.RLock()
 	defer r.RUnlock()
