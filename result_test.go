@@ -263,6 +263,22 @@ func TestResult_GetFailure(t *testing.T) {
 	}
 }
 
+func TestResult_GetTimestamp(t *testing.T) {
+	var units = []struct {
+		got *Result
+		exp time.Time
+	}{
+		{NewResult("", "", nil), time.Time{}},
+		{NewResult("", "", nil), time.Now()},
+	}
+	for _, u := range units {
+		u.got.Timestamp = u.exp
+		if u.got.GetTimestamp() != u.exp {
+			t.Fatalf("expected '%v', got '%v'", u.exp, u.got.Timestamp)
+		}
+	}
+}
+
 func TestResult_SetFailure(t *testing.T) {
 	ex := errors.New("oh man")
 	var units = []struct {
