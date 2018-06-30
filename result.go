@@ -39,6 +39,14 @@ func (r *Result) SetSuccess(success interface{}) {
 	r.Success = success
 }
 
+// GetSuccess safely gets a new success value from a Result
+// which could be shared by multiple go routines.
+func (r *Result) GetSuccess() interface{} {
+	r.RLock()
+	defer r.RUnlock()
+	return r.Success
+}
+
 // IsSuccess checks if the Result has any failure before
 // determining if the result succeeded.
 func (r *Result) IsSuccess() bool {
