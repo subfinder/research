@@ -87,6 +87,14 @@ func (r *Result) SetTimestamp(t time.Time) {
 	r.Timestamp = t
 }
 
+// GetTimestamp safely gets the timestamp value from a Result
+// which could be shared by multiple go routines.
+func (r *Result) GetTimestamp() time.Time {
+	r.RLock()
+	defer r.RUnlock()
+	return r.Timestamp
+}
+
 // IsSuccess checks if the Result has any failure, or
 // that the Success interface{} has actually been filled
 // before determining if the result succeeded.
