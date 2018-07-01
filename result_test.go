@@ -614,3 +614,9 @@ func BenchmarkInitializeSuccessResultSingleThreaded(b *testing.B) {
 		_ = Result{Type: "example", Success: n}
 	}
 }
+
+func BenchmarkInitializeEmptyPointerToResultSingleThreaded(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		_ = &Result{}
+	}
+}
