@@ -9,10 +9,9 @@ import "strings"
 import "encoding/json"
 
 // Result contains the information from any given
-// source. It's the Source author's job to set the
-// type when returning a result. Upon success, a
-// Source source should provide a string as the found
-// subdomain. Upon Failure, the source should provide an error.
+// source. Upon success, a Source source should
+// provide a string as the found subdomain. Upon Failure,
+// the source should provide an error.
 type Result struct {
 	sync.RWMutex
 	Timestamp time.Time
