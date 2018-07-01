@@ -306,7 +306,7 @@ func TestResult_SetFailure(t *testing.T) {
 		{NewResult("lol", "", nil), nil},
 		{NewResult("lol", "", ex), errors.New("new error")},
 		{NewResult("lol", "", ex), nil},
-		{NewResult("lol", "", errors.New("anouther one!")), nil},
+		{NewResult("lol", "", errors.New("anouther one")), nil},
 	}
 	for _, u := range units {
 		u.got.SetFailure(u.exp)
@@ -521,14 +521,14 @@ func ExampleResult_GetTimestamp() {
 }
 
 func ExampleResult_GetFailure() {
-	McErr := errors.New("whoa there!")
+	McErr := errors.New("whoa there")
 	result := NewResult("", nil, McErr)
 	fmt.Println(result.Failure)
-	// Output: whoa there!
+	// Output: whoa there
 }
 
 func ExampleResult_SetFailure() {
-	McErr := errors.New("whoa there!")
+	McErr := errors.New("whoa there")
 	result := NewResult("thisis", "totally.fine.com", nil)
 	result.SetFailure(McErr)
 	if result.IsFailure() {
@@ -537,7 +537,7 @@ func ExampleResult_SetFailure() {
 	if result.IsSuccess() {
 		fmt.Println("this will never print because the failure was set")
 	}
-	// Output: whoa there! we found our failure!
+	// Output: whoa there we found our failure!
 }
 
 func BenchmarkResultGetTypeThreadSafe(b *testing.B) {
