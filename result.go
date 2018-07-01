@@ -32,7 +32,7 @@ func NewResult(t string, s interface{}, f error) *Result {
 	}
 }
 
-// SetSuccess safely sets a new success value for a Result
+// SetSuccess safely sets a new Success value for a Result
 // which could be shared by multiple go routines.
 func (r *Result) SetSuccess(success interface{}) {
 	r.Lock()
@@ -40,7 +40,7 @@ func (r *Result) SetSuccess(success interface{}) {
 	r.Success = success
 }
 
-// GetSuccess safely gets the success value from a Result
+// GetSuccess safely gets the Success value from a Result
 // which could be shared by multiple go routines.
 func (r *Result) GetSuccess() interface{} {
 	r.RLock()
