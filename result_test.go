@@ -584,3 +584,9 @@ func BenchmarkResultGetTypeMultiThreaded(b *testing.B) {
 	}
 	wg.Wait()
 }
+
+func BenchmarkNewResultSingleThreaded(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		NewResult("example", n, nil)
+	}
+}
