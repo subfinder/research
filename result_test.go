@@ -590,3 +590,15 @@ func BenchmarkNewResultSingleThreaded(b *testing.B) {
 		NewResult("example", n, nil)
 	}
 }
+
+func BenchmarkNewResultMultiThreaded(b *testing.B) {
+	wg := sync.WaitGroup{}
+	for n := 0; n < b.N; n++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			NewResult("example", n, nil)
+		}()
+	}
+	wg.Wait()
+}
