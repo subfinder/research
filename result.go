@@ -80,7 +80,7 @@ func (r *Result) GetType() string {
 	return r.Type
 }
 
-// SetTimestamp safely sets a new type value for a Result
+// SetTimestamp safely sets a new timestamp value for a Result
 // which could be shared by multiple go routines.
 func (r *Result) SetTimestamp(t time.Time) {
 	r.Lock()
