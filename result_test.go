@@ -539,3 +539,11 @@ func ExampleResult_SetFailure() {
 	}
 	// Output: whoa there! we found our failure!
 }
+
+func BenchmarkResultGetTypeThreadSafe(b *testing.B) {
+	r := NewResult("example", "picat was here", nil)
+	for n := 0; n < b.N; n++ {
+		if r.GetType() == "example" {
+		}
+	}
+}
