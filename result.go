@@ -20,7 +20,9 @@ type Result struct {
 	Failure   error
 }
 
-// NewResult wraps up the creation of a new Result.
+// NewResult wraps up the creation of a new Result. This function
+// will set the Timestamp value of the Result to the current time
+// in UTC format, which is always preferred.
 func NewResult(t string, s interface{}, f error) *Result {
 	return &Result{
 		Type:      t,
