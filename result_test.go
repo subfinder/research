@@ -566,7 +566,6 @@ func BenchmarkResultGetType(b *testing.B) {
 	r := NewResult("example", "picat was here", nil)
 	for n := 0; n < b.N; n++ {
 		if r.Type == "example" {
-			continue
 		}
 	}
 }
