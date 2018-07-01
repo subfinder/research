@@ -626,3 +626,15 @@ func BenchmarkInitializeSuccessPointerToResultSingleThreaded(b *testing.B) {
 		_ = &Result{Type: "example", Success: n}
 	}
 }
+
+func BenchmarkInitializeEmptyResultMulitThreaded(b *testing.B) {
+	wg := sync.WaitGroup{}
+	for n := 0; n < b.N; n++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_ = Result{}
+		}()
+	}
+	wg.Wait()
+}
