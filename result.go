@@ -96,7 +96,7 @@ func (r *Result) GetTimestamp() time.Time {
 	return r.Timestamp
 }
 
-// IsSuccess checks if the Result has any failure, or
+// IsSuccess checks if the Result has any Failure, or
 // that the Success interface{} has actually been filled
 // before determining if the result succeeded.
 func (r *Result) IsSuccess() bool {
@@ -112,7 +112,7 @@ func (r *Result) IsSuccess() bool {
 	return true
 }
 
-// IsFailure checks if the Result has any failure before
+// IsFailure checks if the Result has any Failure before
 // determining if the result failed.
 func (r *Result) IsFailure() bool {
 	r.RLock()
