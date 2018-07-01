@@ -354,6 +354,45 @@ func TestResultMultiThreadedBehavior(t *testing.T) {
 	}
 }
 
+func TestResultMultiThreadedBehaviorMore(t *testing.T) {
+	times := []struct {
+		timeout int
+		value   string
+	}{
+		{3, "a"},
+		{4, "b"},
+		{5, "c"},
+		{4, "d"},
+		{2, "e"},
+		{3, "f"},
+	}
+
+	expWinner := "c" // last one to obtain a lock
+
+	sharedResult := &Result{}
+
+	wg := sync.WaitGroup{}
+
+	for _, t := range times {
+		wg.Add(1)
+		go func(t int, v string, r *Result) {
+			defer wg.Done()
+			// Note: this is showing how the locks work when used in
+			// a different, but still expected manner.
+			if !r.IsSuccess() {
+				time.Sleep(time.Duration(t) * time.Millisecond)
+				r.SetSuccess(v)
+			}
+		}(t.timeout, t.value, sharedResult)
+	}
+
+	wg.Wait()
+
+	if sharedResult.Success != expWinner {
+		t.Fatalf("expected '%v', got '%v'", expWinner, sharedResult.Success)
+	}
+}
+
 func ExampleResult() {
 	result := Result{Type: "example", Success: "info.bing.com"}
 	if result.Failure != nil {
