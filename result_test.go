@@ -570,3 +570,17 @@ func BenchmarkResultGetType(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkResultGetTypeMultiThreaded(b *testing.B) {
+	r := NewResult("example", "picat was here", nil)
+	wg := sync.WaitGroup{}
+	for n := 0; n < b.N; n++ {
+		wg.Add(1)
+		go func(r *Result) {
+			defer wg.Done()
+			if r.Type == "example" {
+			}
+		}(r)
+	}
+	wg.Wait()
+}
