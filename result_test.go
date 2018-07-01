@@ -338,7 +338,7 @@ func TestResultMultiThreadedBehavior(t *testing.T) {
 		wg.Add(1)
 		go func(t int, v string, r *Result) {
 			defer wg.Done()
-			// Note: this is only a ok for Milliseconds, not
+			// Note: this is only ok for Milliseconds, not
 			// nanoseconds in my testing.
 			time.Sleep(time.Duration(t) * time.Millisecond)
 			if !r.IsSuccess() {
