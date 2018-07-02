@@ -127,3 +127,35 @@ func TestAggregateCustomResultsMore(t *testing.T) {
 	}
 }
 
+func ExampleAggregateCustomResults() {
+	fakeResults := []*Result{
+		&Result{Type: "color", Success: "red"},
+		&Result{Type: "color", Success: "green"},
+		&Result{Type: "color", Success: "blue"},
+		&Result{Type: "color", Failure: errors.New("no color")},
+		&Result{Type: "wiggle", Failure: errors.New("wiggle")},
+		&Result{Success: "example"},
+		&Result{Failure: errors.New("example1")},
+		&Result{Failure: errors.New("example2")},
+	}
+
+	// imagine a function doing something useful
+	fakeResultsChan := make(chan *Result)
+	go func(fakeResults []*Result, fakeResultsChan chan *Result) {
+		defer close(fakeResultsChan)
+		for _, result := range fakeResults {
+			fakeResultsChan <- result
+		}
+	}(fakeResults, fakeResultsChan)
+
+	// consume aggregated results
+	for result := range AggregateCustomResults(fakeResultsChan, func(r *Result) bool {
+		return r.Type == "color" && r.IsSuccess() // only successful results of type "color"
+	}) {
+		fmt.Println(result.Success)
+	}
+	// Output:
+	// red
+	// green
+	// blue
+}
