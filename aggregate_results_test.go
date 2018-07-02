@@ -52,7 +52,7 @@ func TestAggregateFailedResults(t *testing.T) {
 
 	counter := 0
 
-	for _ = range AggregateFailuedResults(fakeResultsChan) {
+	for _ = range AggregateFailedResults(fakeResultsChan) {
 		counter++
 	}
 
