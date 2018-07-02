@@ -211,3 +211,5 @@ func ExampleAggregateFailedResults() {
 	}
 
 	fmt.Println(counter)
+	// Output: 2
+}
