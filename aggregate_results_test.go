@@ -187,3 +187,27 @@ func ExampleAggregateSuccessfulResults() {
 	// Output: 3
 }
 
+func ExampleAggregateFailedResults() {
+	fakeResults := []*Result{
+		&Result{Success: true},
+		&Result{Success: 0},
+		&Result{Success: "wiggle"},
+		&Result{Failure: errors.New("example1")},
+		&Result{Failure: errors.New("example2")},
+	}
+
+	fakeResultsChan := make(chan *Result)
+	go func(fakeResults []*Result, fakeResultsChan chan *Result) {
+		defer close(fakeResultsChan)
+		for _, result := range fakeResults {
+			fakeResultsChan <- result
+		}
+	}(fakeResults, fakeResultsChan)
+
+	counter := 0
+
+	for _ = range AggregateFailedResults(fakeResultsChan) {
+		counter++
+	}
+
+	fmt.Println(counter)
