@@ -30,6 +30,8 @@ func AggregateFailedResults(in chan *Result) <-chan *Result {
 	return out
 }
 
+// AggregateCustomResults takes a given Result(s) channel as input
+// along with a custom filter function that will be executed with each Result.
 func AggregateCustomResults(in chan *Result, custom func(r *Result) bool) <-chan *Result {
 	out := make(chan *Result)
 	go func(in, out chan *Result) {
