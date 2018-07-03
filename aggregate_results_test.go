@@ -24,7 +24,7 @@ func TestAggregateSuccessfulResults(t *testing.T) {
 
 	counter := 0
 
-	for _ = range AggregateSuccessfulResults(fakeResultsChan) {
+	for range AggregateSuccessfulResults(fakeResultsChan) {
 		counter++
 	}
 
@@ -52,7 +52,7 @@ func TestAggregateFailedResults(t *testing.T) {
 
 	counter := 0
 
-	for _ = range AggregateFailedResults(fakeResultsChan) {
+	for range AggregateFailedResults(fakeResultsChan) {
 		counter++
 	}
 
@@ -81,7 +81,7 @@ func TestAggregateCustomResults(t *testing.T) {
 
 	counter := 0
 
-	for _ = range AggregateCustomResults(fakeResultsChan, func(r *Result) bool {
+	for range AggregateCustomResults(fakeResultsChan, func(r *Result) bool {
 		_, ok := r.Success.(bool)
 		return ok
 	}) {
@@ -179,7 +179,7 @@ func ExampleAggregateSuccessfulResults() {
 
 	counter := 0
 
-	for _ = range AggregateSuccessfulResults(fakeResultsChan) {
+	for range AggregateSuccessfulResults(fakeResultsChan) {
 		counter++
 	}
 
@@ -206,7 +206,7 @@ func ExampleAggregateFailedResults() {
 
 	counter := 0
 
-	for _ = range AggregateFailedResults(fakeResultsChan) {
+	for range AggregateFailedResults(fakeResultsChan) {
 		counter++
 	}
 
@@ -234,7 +234,7 @@ func BenchmarkAggregateSuccessfulResults(b *testing.B) {
 
 		counter := 0
 
-		for _ = range AggregateSuccessfulResults(fakeResultsChan) {
+		for range AggregateSuccessfulResults(fakeResultsChan) {
 			counter++
 		}
 	}
@@ -261,7 +261,7 @@ func BenchmarkAggregateFailedResults(b *testing.B) {
 
 		counter := 0
 
-		for _ = range AggregateFailedResults(fakeResultsChan) {
+		for range AggregateFailedResults(fakeResultsChan) {
 			counter++
 		}
 	}
@@ -292,7 +292,7 @@ func BenchmarkAggregateCustomResultsSuccessful(b *testing.B) {
 
 		counter := 0
 
-		for _ = range AggregateCustomResults(fakeResultsChan, successfulOnly) {
+		for range AggregateCustomResults(fakeResultsChan, successfulOnly) {
 			counter++
 		}
 	}
@@ -323,7 +323,7 @@ func BenchmarkAggregateCustomResultsFailed(b *testing.B) {
 
 		counter := 0
 
-		for _ = range AggregateCustomResults(fakeResultsChan, successfulOnly) {
+		for range AggregateCustomResults(fakeResultsChan, successfulOnly) {
 			counter++
 		}
 	}
@@ -355,7 +355,7 @@ func BenchmarkAggregateCustomResultsSuccessfulStrings(b *testing.B) {
 
 		counter := 0
 
-		for _ = range AggregateCustomResults(fakeResultsChan, successfulStringsOnly) {
+		for range AggregateCustomResults(fakeResultsChan, successfulStringsOnly) {
 			counter++
 		}
 	}
@@ -387,7 +387,7 @@ func BenchmarkAggregateCustomResultsSuccessfulInts(b *testing.B) {
 
 		counter := 0
 
-		for _ = range AggregateCustomResults(fakeResultsChan, successfulStringsOnly) {
+		for range AggregateCustomResults(fakeResultsChan, successfulStringsOnly) {
 			counter++
 		}
 	}
@@ -419,7 +419,7 @@ func BenchmarkAggregateCustomResultsSuccessfulBools(b *testing.B) {
 
 		counter := 0
 
-		for _ = range AggregateCustomResults(fakeResultsChan, successfulStringsOnly) {
+		for range AggregateCustomResults(fakeResultsChan, successfulStringsOnly) {
 			counter++
 		}
 	}
