@@ -4,9 +4,9 @@
 #### Run Tests
 ```shell
 $ cd /path/to/research
-$ go test -v -run=. ./...
+$ GOCACHE=off go test -v -run=. ./... -race
 # just core
-$ go test -v -run=. ./core
+$ GOCACHE=off go test -v -run=. ./core -race
 ```
 
 # Why?
