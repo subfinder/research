@@ -7,7 +7,7 @@ func AggregateSuccessfulResults(in chan *Result) <-chan *Result {
 	go func(in, out chan *Result) {
 		defer close(out)
 		for result := range in {
-			if result.Failure == nil {
+			if result.IsSuccess() {
 				out <- result
 			}
 		}
