@@ -322,7 +322,7 @@ func TestResultMultiThreadedBehavior(t *testing.T) {
 		value   string
 	}{
 		{5, "a"},
-		{3, "b"},
+		{5, "b"},
 		{4, "c"},
 		{4, "d"},
 		{2, "e"},
