@@ -298,3 +298,34 @@ func BenchmarkAggregateCustomResultsSuccessful(b *testing.B) {
 	}
 }
 
+func BenchmarkAggregateCustomResultsFailed(b *testing.B) {
+	fakeResults := []*Result{
+		&Result{Success: true},
+		&Result{Failure: errors.New("example1")},
+		&Result{Success: 0},
+		&Result{Failure: errors.New("example2")},
+		&Result{Success: "wiggle"},
+		&Result{Failure: errors.New("example3")},
+	}
+
+	var successfulOnly = func(r *Result) bool {
+		return r.IsFailure()
+	}
+
+	for n := 0; n < b.N; n++ {
+		fakeResultsChan := make(chan *Result)
+		go func(fakeResults []*Result, fakeResultsChan chan *Result) {
+			defer close(fakeResultsChan)
+			for _, result := range fakeResults {
+				fakeResultsChan <- result
+			}
+		}(fakeResults, fakeResultsChan)
+
+		counter := 0
+
+		for _ = range AggregateCustomResults(fakeResultsChan, successfulOnly) {
+			counter++
+		}
+	}
+}
+
