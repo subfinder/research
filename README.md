@@ -1,6 +1,14 @@
 # Subzero
 ❄️  Research project for the development of [SubFinder](https://github.com/subfinder/subfinder) core API `v2`
 
+#### Run Tests
+```shell
+$ cd /path/to/research
+$ go test -v -run=. ./...
+# just core
+$ go test -v -run=. ./core
+```
+
 # Why?
 That's a great question! Hopefully these reasons will make sense:
 
