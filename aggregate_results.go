@@ -1,6 +1,6 @@
 package subzero
 
-// AggregateSuccessfulResults takes a given Result(s) channel as input
+// AggregateSuccessfulResults takes a given results channel as input
 // and only sends successful results down the returned output channel.
 func AggregateSuccessfulResults(in chan *Result) <-chan *Result {
 	out := make(chan *Result)
@@ -15,7 +15,7 @@ func AggregateSuccessfulResults(in chan *Result) <-chan *Result {
 	return out
 }
 
-// AggregateSuccessfulResults takes a given Result(s) channel as input
+// AggregateSuccessfulResults takes a given results channel as input
 // and only sends failed results down the returned output channel.
 func AggregateFailedResults(in chan *Result) <-chan *Result {
 	out := make(chan *Result)
@@ -30,7 +30,7 @@ func AggregateFailedResults(in chan *Result) <-chan *Result {
 	return out
 }
 
-// AggregateCustomResults takes a given Result(s) channel as input
+// AggregateCustomResults takes a given results channel as input
 // along with a custom filter function that will be executed with each Result.
 func AggregateCustomResults(in chan *Result, custom func(r *Result) bool) <-chan *Result {
 	out := make(chan *Result)
