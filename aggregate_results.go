@@ -1,5 +1,7 @@
 package subzero
 
+// AggregateSuccessfulResults takes a given Result(s) channel as input
+// and only sends successful results down the returned output channel.
 func AggregateSuccessfulResults(in chan *Result) <-chan *Result {
 	out := make(chan *Result)
 	go func(in, out chan *Result) {
