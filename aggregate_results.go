@@ -15,6 +15,8 @@ func AggregateSuccessfulResults(in chan *Result) <-chan *Result {
 	return out
 }
 
+// AggregateSuccessfulResults takes a given Result(s) channel as input
+// and only sends failed results down the returned output channel.
 func AggregateFailedResults(in chan *Result) <-chan *Result {
 	out := make(chan *Result)
 	go func(in, out chan *Result) {
