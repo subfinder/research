@@ -88,3 +88,20 @@ func ExampleGeneralOptions() {
 	// Resolvers:	 '[]'
 }
 
+func ExampleNewDefaultGeneralOptions() {
+	opts := NewDefaultGeneralOptions()
+	opts.Print()
+	// Output:
+	// Verbose:	 'false'
+	// ColorSupport:	 'true'
+	// AvailableCores:	 '8'
+	// DefaultTimeout:	 '5s'
+	// TargetDomains:	 '[]'
+	// Recursive:	 'false'
+	// PassiveOnly:	 'false'
+	// IgnoreErrors:	 'false'
+	// OutputType:	 'plaintext'
+	// Sources:	 '[]'
+	// OutputDir:	 ''
+	// Resolvers:	 '[1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4 9.9.9.9 149.112.112.112 208.67.222.222 208.67.220.220]'
+}
