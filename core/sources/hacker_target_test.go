@@ -1,28 +1,43 @@
 package sources
 
+import core "github.com/subfinder/research/core"
 import "testing"
 import "fmt"
 import "sync"
+import "strings"
+
+func TestIsOverFreeLimit(t *testing.T) {
+	source := HackerTarget{}
+
+	if source.IsOverFreeLimit() {
+		t.Log("warning: the tests will be ran with API request limit hit")
+	}
+}
 
 func TestHackerTarget(t *testing.T) {
 	domain := "google.com"
 	source := HackerTarget{}
-	results := []string{}
+	results := []*core.Result{}
 
 	for result := range source.ProcessDomain(domain) {
-		results = append(results, result.Success.(string))
+		results = append(results, result)
 	}
 
-	// should be something like 4000 results
-	if !(len(results) >= 1) {
-		t.Errorf("expected to return more than one successful result, got %v", len(results))
+	if len(results) == 1 {
+		if !strings.Contains(results[0].Failure.Error(), "API count exceeded") {
+			t.Errorf("expected to return API count error, got '%v'", results[0].Failure.Error())
+		}
+	} else {
+		if !(len(results) >= 4000) {
+			t.Errorf("expected to return more than one successful result, got %v", len(results))
+		}
 	}
 }
 
 func TestHackerTarget_MultiThreaded(t *testing.T) {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := HackerTarget{}
-	results := []string{}
+	results := []*core.Result{}
 
 	wg := sync.WaitGroup{}
 	mx := sync.Mutex{}
@@ -33,7 +48,7 @@ func TestHackerTarget_MultiThreaded(t *testing.T) {
 			defer wg.Done()
 			for result := range source.ProcessDomain(domain) {
 				mx.Lock()
-				results = append(results, result.Success.(string))
+				results = append(results, result)
 				mx.Unlock()
 			}
 		}(domain)
@@ -41,18 +56,24 @@ func TestHackerTarget_MultiThreaded(t *testing.T) {
 
 	wg.Wait() // collect results
 
-	if !(len(results) >= 4) {
-		t.Errorf("expected over ( or exactly ) 4 results from multi-threaded example, got '%v'", len(results))
+	if len(results) == 4 {
+		if !strings.Contains(results[0].Failure.Error(), "API count exceeded") {
+			t.Errorf("expected to return API count error, got '%v'", results[0].Failure.Error())
+		}
+	} else {
+		if !(len(results) >= 4000) {
+			t.Errorf("expected to return more than one successful result, got %v", len(results))
+		}
 	}
 }
 
 func ExampleHackerTarget() {
 	domain := "google.com"
 	source := HackerTarget{}
-	results := []string{}
+	results := []*core.Result{}
 
 	for result := range source.ProcessDomain(domain) {
-		results = append(results, result.Success.(string))
+		results = append(results, result)
 	}
 
 	fmt.Println(len(results) >= 1)
@@ -62,7 +83,7 @@ func ExampleHackerTarget() {
 func ExampleHackerTargetMultiThreaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := HackerTarget{}
-	results := []string{}
+	results := []*core.Result{}
 
 	wg := sync.WaitGroup{}
 	mx := sync.Mutex{}
@@ -73,7 +94,7 @@ func ExampleHackerTargetMultiThreaded() {
 			defer wg.Done()
 			for result := range source.ProcessDomain(domain) {
 				mx.Lock()
-				results = append(results, result.Success.(string))
+				results = append(results, result)
 				mx.Unlock()
 			}
 		}(domain)
@@ -90,12 +111,9 @@ func BenchmarkHackerTargetSingleThreaded(b *testing.B) {
 	source := HackerTarget{}
 
 	for n := 0; n < b.N; n++ {
-		results := []string{}
+		results := []*core.Result{}
 		for result := range source.ProcessDomain(domain) {
-			results = append(results, result.Success.(string))
-		}
-		if !(len(results) >= 1) {
-			b.Errorf("expected more then 4000 results, got '%v'", len(results))
+			results = append(results, result)
 		}
 	}
 }
@@ -107,7 +125,7 @@ func BenchmarkHackerTargetMultiThreaded(b *testing.B) {
 	mx := sync.Mutex{}
 
 	for n := 0; n < b.N; n++ {
-		results := []string{}
+		results := []*core.Result{}
 
 		for _, domain := range domains {
 			wg.Add(1)
@@ -115,16 +133,12 @@ func BenchmarkHackerTargetMultiThreaded(b *testing.B) {
 				defer wg.Done()
 				for result := range source.ProcessDomain(domain) {
 					mx.Lock()
-					results = append(results, result.Success.(string))
+					results = append(results, result)
 					mx.Unlock()
 				}
 			}(domain)
 		}
 
 		wg.Wait() // collect results
-
-		if !(len(results) > 2) {
-			b.Errorf("expected more then 2 results, got '%v'", len(results))
-		}
 	}
 }
