@@ -44,3 +44,29 @@ func TestDefaultDNSResolvers(t *testing.T) {
 	}
 }
 
+func TestNewGeneralOptions(t *testing.T) {
+	opts := NewDefaultGeneralOptions()
+	var units = []struct {
+		got interface{}
+		exp interface{}
+	}{
+		{opts.Verbose, false},
+		{opts.ColorSupport, true},
+		{opts.AvailableCores, runtime.NumCPU()},
+		{opts.DefaultTimeout, time.Duration(5 * time.Second)},
+		{opts.Recursive, false},
+		{opts.PassiveOnly, false},
+		{opts.IgnoreErrors, false},
+		{opts.OutputType, "plaintext"},
+		{opts.OutputDir, ""},
+		{len(opts.TargetDomains), 0},
+		{len(opts.Sources), 0},
+		{len(opts.Resolvers), 8},
+	}
+	for _, u := range units {
+		if !reflect.DeepEqual(u.exp, u.got) {
+			t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
+		}
+	}
+}
+
