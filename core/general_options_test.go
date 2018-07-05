@@ -30,3 +30,17 @@ func TestGeneralOptions(t *testing.T) {
 	}
 }
 
+func TestDefaultDNSResolvers(t *testing.T) {
+	var units = []struct {
+		got interface{}
+		exp interface{}
+	}{
+		{len(defaultDNSResolvers), 8},
+	}
+	for _, u := range units {
+		if !reflect.DeepEqual(u.exp, u.got) {
+			t.Fatalf("expected '%v', got '%v'", u.exp, u.got)
+		}
+	}
+}
+
