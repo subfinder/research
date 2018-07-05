@@ -6,6 +6,7 @@ import "net"
 import "time"
 import "bufio"
 import "strings"
+import "errors"
 
 type HackerTarget struct{}
 
@@ -63,7 +64,12 @@ func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 		// read response body, extracting subdomains
 		scanner := bufio.NewScanner(resp.Body)
 		for scanner.Scan() {
-			results <- &core.Result{Type: "hacker target", Success: strings.Split(scanner.Text(), ",")[0]}
+			str := strings.Split(scanner.Text(), ",")[0]
+			if strings.Contains(str, "API count exceeded") {
+				results <- &core.Result{Type: "hacker target", Failure: errors.New(str)}
+			} else {
+				results <- &core.Result{Type: "hacker target", Success: str}
+			}
 		}
 	}(domain, results)
 	return results
