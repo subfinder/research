@@ -33,6 +33,7 @@ func (source *HackerTarget) IsOverFreeLimit() bool {
 		if strings.Contains(scanner.Text(), "API count exceeded") {
 			return true
 		}
+		break
 	}
 	return false
 }
