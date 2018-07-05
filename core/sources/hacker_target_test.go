@@ -84,3 +84,47 @@ func ExampleHackerTargetMultiThreaded() {
 	fmt.Println(len(results) >= 1)
 	// Output: true
 }
+
+func BenchmarkHackerTargetSingleThreaded(b *testing.B) {
+	domain := "google.com"
+	source := HackerTarget{}
+
+	for n := 0; n < b.N; n++ {
+		results := []string{}
+		for result := range source.ProcessDomain(domain) {
+			results = append(results, result.Success.(string))
+		}
+		if !(len(results) >= 1) {
+			b.Errorf("expected more then 4000 results, got '%v'", len(results))
+		}
+	}
+}
+
+func BenchmarkHackerTargetMultiThreaded(b *testing.B) {
+	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
+	source := HackerTarget{}
+	wg := sync.WaitGroup{}
+	mx := sync.Mutex{}
+
+	for n := 0; n < b.N; n++ {
+		results := []string{}
+
+		for _, domain := range domains {
+			wg.Add(1)
+			go func(domain string) {
+				defer wg.Done()
+				for result := range source.ProcessDomain(domain) {
+					mx.Lock()
+					results = append(results, result.Success.(string))
+					mx.Unlock()
+				}
+			}(domain)
+		}
+
+		wg.Wait() // collect results
+
+		if !(len(results) > 2) {
+			b.Errorf("expected more then 2 results, got '%v'", len(results))
+		}
+	}
+}
