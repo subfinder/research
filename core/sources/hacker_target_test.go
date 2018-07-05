@@ -18,3 +18,15 @@ func TestHackerTarget(t *testing.T) {
 	}
 }
 
+func ExampleHackerTarget() {
+	domain := "google.com"
+	source := HackerTarget{}
+	results := []string{}
+
+	for result := range source.ProcessDomain(domain) {
+		results = append(results, result.Success.(string))
+	}
+
+	fmt.Println(len(results) > 4000)
+	// Output: true
+}
