@@ -21,10 +21,9 @@ func (source *HackerTarget) IsOverFreeLimit() bool {
 	}
 
 	// get response from the API
-	resp, err := httpClient.Get("https://api.hackertarget.com/hostsearch/?q=" + domain)
+	resp, err := httpClient.Get("https://api.hackertarget.com/hostsearch/?q=")
 	if err != nil {
-		results <- &core.Result{Type: "hacker target", Failure: err}
-		return
+		return true
 	}
 	defer resp.Body.Close()
 
