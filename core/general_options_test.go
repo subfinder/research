@@ -70,3 +70,21 @@ func TestNewGeneralOptions(t *testing.T) {
 	}
 }
 
+func ExampleGeneralOptions() {
+	opts := GeneralOptions{}
+	opts.Print()
+	// Output:
+	// Verbose:	 'false'
+	// ColorSupport:	 'false'
+	// AvailableCores:	 '0'
+	// DefaultTimeout:	 '0s'
+	// TargetDomains:	 '[]'
+	// Recursive:	 'false'
+	// PassiveOnly:	 'false'
+	// IgnoreErrors:	 'false'
+	// OutputType:	 ''
+	// Sources:	 '[]'
+	// OutputDir:	 ''
+	// Resolvers:	 '[]'
+}
+
