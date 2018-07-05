@@ -2,6 +2,7 @@ package subzero
 
 import "runtime"
 import "time"
+import "fmt"
 
 // GeneralOptions represents a set of global options an application
 // may be aware of (thinking of a command-line app).
@@ -46,4 +47,36 @@ func NewDefaultGeneralOptions() *GeneralOptions {
 		OutputDir:      "",
 		Resolvers:      defaultDNSResolvers,
 	}
+}
+
+func (opts *GeneralOptions) Printable() string {
+	return fmt.Sprintf(
+		"Verbose:\t '%v'\n"+
+			"ColorSupport:\t '%v'\n"+
+			"AvailableCores:\t '%v'\n"+
+			"DefaultTimeout:\t '%v'\n"+
+			"TargetDomains:\t '%v'\n"+
+			"Recursive:\t '%v'\n"+
+			"PassiveOnly:\t '%v'\n"+
+			"IgnoreErrors:\t '%v'\n"+
+			"OutputType:\t '%v'\n"+
+			"Sources:\t '%v'\n"+
+			"OutputDir:\t '%v'\n"+
+			"Resolvers:\t '%v'\n",
+		opts.Verbose,
+		opts.ColorSupport,
+		opts.AvailableCores,
+		opts.DefaultTimeout,
+		opts.TargetDomains,
+		opts.Recursive,
+		opts.PassiveOnly,
+		opts.IgnoreErrors,
+		opts.OutputType,
+		opts.Sources,
+		opts.OutputDir,
+		opts.Resolvers)
+}
+
+func (opts *GeneralOptions) Print() {
+	fmt.Println(opts.Printable())
 }
