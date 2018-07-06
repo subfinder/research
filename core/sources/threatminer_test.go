@@ -46,3 +46,16 @@ func TestThreatminerMultiThreaded(t *testing.T) {
 	}
 }
 
+func ExampleThreatminer() {
+	domain := "bing.com"
+	source := Threatminer{}
+	results := []*core.Result{}
+
+	for result := range source.ProcessDomain(domain) {
+		results = append(results, result)
+	}
+
+	fmt.Println(len(results) >= 140)
+	// Output: true
+}
+
