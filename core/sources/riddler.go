@@ -82,8 +82,8 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 			_, err := source.Authenticate()
 			if err != nil {
 				results <- &core.Result{Type: "riddler", Failure: err}
+				return
 			}
-			return
 		}
 
 		httpClient := &http.Client{
@@ -100,19 +100,15 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 		var err error
 
 		if source.APIToken != "" {
-			// authenticated
-			data := []byte(`{"query":"pld:` + domain + `", "output":"host", "limit":500}`)
-
-			req, err := http.NewRequest("POST", "https://riddler.io/api/search", bytes.NewBuffer(data))
+			query := strings.NewReader(`{"query": "pld:` + domain + `", "output": "host", "limit": 500}`)
+			req, err := http.NewRequest("POST", "https://riddler.io/api/search", query)
 			if err != nil {
-				results <- &core.Result{Type: "riddler", Failure: err}
-				return
+				// handle err
 			}
+			req.Header.Set("Content-type", "application/json")
+			req.Header.Set("Authentication-Token", source.APIToken)
 
-			req.Header.Add("Content-Type", "application/json")
-			req.Header.Add("Authentication-Token", source.APIToken)
-
-			resp, err = httpClient.Do(req)
+			resp, err := httpClient.Do(req)
 			if err != nil {
 				results <- &core.Result{Type: "riddler", Failure: err}
 				return
@@ -131,7 +127,7 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 			for _, r := range hostResponse {
 				results <- &core.Result{Type: "riddler", Success: r.Host}
 			}
-
+			return
 		}
 
 		if source.APIToken == "" {
@@ -154,6 +150,7 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 					results <- &core.Result{Type: "riddler", Success: strParts[5]}
 				}
 			}
+			return
 		}
 
 	}(domain, results)
