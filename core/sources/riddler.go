@@ -10,3 +10,9 @@ import "net"
 import "time"
 import "errors"
 
+type Riddler struct {
+	Email    string
+	Password string
+	APIToken string
+}
+
