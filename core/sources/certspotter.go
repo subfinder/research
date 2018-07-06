@@ -9,3 +9,7 @@ import "encoding/json"
 
 type CertSpotter struct{}
 
+type certspotterObject struct {
+	DNSNames []string `json:"dns_names"`
+}
+
