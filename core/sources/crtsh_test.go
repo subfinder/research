@@ -85,3 +85,15 @@ func ExampleCrtSh_MultiThreaded() {
 	// Output: true
 }
 
+func BenchmarkCrtShSingleThreaded(b *testing.B) {
+	domain := "google.com"
+	source := CrtSh{}
+
+	for n := 0; n < b.N; n++ {
+		results := []*core.Result{}
+		for result := range source.ProcessDomain(domain) {
+			results = append(results, result)
+		}
+	}
+}
+
