@@ -10,3 +10,7 @@ import "bytes"
 
 type CrtSh struct{}
 
+type crtshObject struct {
+	NameValue string `json:"name_value"`
+}
+
