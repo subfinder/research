@@ -49,3 +49,16 @@ func TestCertSpotter_MultiThreaded(t *testing.T) {
 	}
 }
 
+func ExampleCertSpotter() {
+	domain := "google.com"
+	source := CertSpotter{}
+	results := []*core.Result{}
+
+	for result := range source.ProcessDomain(domain) {
+		results = append(results, result)
+	}
+
+	fmt.Println(len(results) >= 5000)
+	// Output: true
+}
+
