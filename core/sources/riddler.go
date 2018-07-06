@@ -72,3 +72,90 @@ func (source *Riddler) Authenticate() (bool, error) {
 	return true, nil
 }
 
+func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
+	results := make(chan *core.Result)
+	go func(domain string, results chan *core.Result) {
+		defer close(results)
+
+		// check if source needs to be authenticated
+		if source.APIToken == "" && source.Email != "" && source.Password != "" {
+			_, err := source.Authenticate()
+			if err != nil {
+				results <- &core.Result{Type: "riddler", Failure: err}
+			}
+			return
+		}
+
+		httpClient := &http.Client{
+			Timeout: time.Second * 60,
+			Transport: &http.Transport{
+				Dial: (&net.Dialer{
+					Timeout: 5 * time.Second,
+				}).Dial,
+				TLSHandshakeTimeout: 5 * time.Second,
+			},
+		}
+
+		var resp *http.Response
+		var err error
+
+		if source.APIToken != "" {
+			// authenticated
+			data := []byte(`{"query":"pld:` + domain + `", "output":"host", "limit":500}`)
+
+			req, err := http.NewRequest("POST", "https://riddler.io/api/search", bytes.NewBuffer(data))
+			if err != nil {
+				results <- &core.Result{Type: "riddler", Failure: err}
+				return
+			}
+
+			req.Header.Add("Content-Type", "application/json")
+			req.Header.Add("Authentication-Token", source.APIToken)
+
+			resp, err = httpClient.Do(req)
+			if err != nil {
+				results <- &core.Result{Type: "riddler", Failure: err}
+				return
+			}
+
+			defer resp.Body.Close()
+
+			hostResponse := []*riddlerHost{}
+
+			err = json.NewDecoder(resp.Body).Decode(&hostResponse)
+			if err != nil {
+				results <- &core.Result{Type: "riddler", Failure: err}
+				return
+			}
+
+			for _, r := range hostResponse {
+				results <- &core.Result{Type: "riddler", Success: r.Host}
+			}
+
+		}
+
+		if source.APIToken == "" {
+			// not authenticated
+			resp, err = httpClient.Get("https://riddler.io/search/exportcsv?q=pld:" + domain)
+			if err != nil {
+				results <- &core.Result{Type: "riddler", Failure: err}
+				return
+			}
+			defer resp.Body.Close()
+			scanner := bufio.NewScanner(resp.Body)
+			counter := 0
+			for scanner.Scan() {
+				if counter <= 2 {
+					counter += 1
+					continue // skip first two lines
+				}
+				strParts := strings.Split(scanner.Text(), ",")
+				if (len(strParts) >= 6) && strings.Contains(strParts[5], domain) {
+					results <- &core.Result{Type: "riddler", Success: strParts[5]}
+				}
+			}
+		}
+
+	}(domain, results)
+	return results
+}
