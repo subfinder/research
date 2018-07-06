@@ -88,3 +88,15 @@ func ExampleCertSpotter_MultiThreaded() {
 	// Output: true
 }
 
+func BenchmarkCertSpotterSingleThreaded(b *testing.B) {
+	domain := "google.com"
+	source := CertSpotter{}
+
+	for n := 0; n < b.N; n++ {
+		results := []*core.Result{}
+		for result := range source.ProcessDomain(domain) {
+			results = append(results, result)
+		}
+	}
+}
+
