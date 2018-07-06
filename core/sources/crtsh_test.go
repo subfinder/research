@@ -81,7 +81,7 @@ func ExampleCrtSh_MultiThreaded() {
 
 	wg.Wait() // collect results
 
-	fmt.Println(len(results) > 1180)
+	fmt.Println(len(results) >= 1000)
 	// Output: true
 }
 
