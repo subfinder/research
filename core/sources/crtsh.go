@@ -8,3 +8,5 @@ import "encoding/json"
 import "bufio"
 import "bytes"
 
+type CrtSh struct{}
+
