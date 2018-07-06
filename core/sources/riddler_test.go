@@ -46,3 +46,16 @@ func TestRiddlerMultiThreaded(t *testing.T) {
 	}
 }
 
+func ExampleRiddler() {
+	domain := "bing.com"
+	source := Riddler{}
+	results := []*core.Result{}
+
+	for result := range source.ProcessDomain(domain) {
+		results = append(results, result)
+	}
+
+	fmt.Println(len(results) >= 9)
+	// Output: true
+}
+
