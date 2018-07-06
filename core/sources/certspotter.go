@@ -7,3 +7,5 @@ import "time"
 import "strings"
 import "encoding/json"
 
+type CertSpotter struct{}
+
