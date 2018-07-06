@@ -20,3 +20,11 @@ type riddlerHost struct {
 	Host string `json:"host"`
 }
 
+type riddlerAuthenticationResponse struct {
+	Response struct {
+		User struct {
+			AuthenticationToken string `json:"authentication_token"`
+		} `json:"user"`
+	} `json:"response"`
+}
+
