@@ -8,3 +8,5 @@ import "bufio"
 import "regexp"
 import "strings"
 
+type Threatminer struct{}
+
