@@ -16,3 +16,7 @@ type Riddler struct {
 	APIToken string
 }
 
+type riddlerHost struct {
+	Host string `json:"host"`
+}
+
