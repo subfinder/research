@@ -8,7 +8,9 @@ import "bufio"
 import "strings"
 import "errors"
 
-type HackerTarget struct{}
+type HackerTarget struct {
+	APIKey string
+}
 
 func (source *HackerTarget) IsOverFreeLimit() bool {
 	httpClient := &http.Client{
@@ -53,8 +55,16 @@ func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 			},
 		}
 
-		// get response from the API
-		resp, err := httpClient.Get("https://api.hackertarget.com/hostsearch/?q=" + domain)
+		// get response from the API, optionally with an API key
+		var resp *http.Response
+		var err error
+
+		// check API key
+		if source.APIKey != "" {
+			resp, err = httpClient.Get("https://api.hackertarget.com/hostsearch/?q=" + domain + "&apikey=" + source.APIKey)
+		} else {
+			resp, err = httpClient.Get("https://api.hackertarget.com/hostsearch/?q=" + domain)
+		}
 		if err != nil {
 			results <- &core.Result{Type: "hacker target", Failure: err}
 			return
