@@ -9,3 +9,5 @@ import "bytes"
 import "regexp"
 import "strings"
 
+type WaybackArchive struct{}
+
