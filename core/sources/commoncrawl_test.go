@@ -97,3 +97,27 @@ func BenchmarkCommonCrawlDotOrgSingleThreaded(b *testing.B) {
 	}
 }
 
+func BenchmarkCommonCrawlDotOrgMultiThreaded(b *testing.B) {
+	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
+	source := CommonCrawlDotOrg{}
+	wg := sync.WaitGroup{}
+	mx := sync.Mutex{}
+
+	for n := 0; n < b.N; n++ {
+		results := []*core.Result{}
+
+		for _, domain := range domains {
+			wg.Add(1)
+			go func(domain string) {
+				defer wg.Done()
+				for result := range source.ProcessDomain(domain) {
+					mx.Lock()
+					results = append(results, result)
+					mx.Unlock()
+				}
+			}(domain)
+		}
+
+		wg.Wait() // collect results
+	}
+}
