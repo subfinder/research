@@ -46,3 +46,16 @@ func TestFindSubdomainsDotComMultiThreaded(t *testing.T) {
 	}
 }
 
+func ExampleFindSubdomainsDotCom() {
+	domain := "bing.com"
+	source := FindSubdomainsDotCom{}
+	results := []*core.Result{}
+
+	for result := range source.ProcessDomain(domain) {
+		results = append(results, result)
+	}
+
+	fmt.Println(len(results) >= 400)
+	// Output: true
+}
+
