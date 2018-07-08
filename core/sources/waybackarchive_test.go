@@ -55,3 +55,16 @@ func TestWaybackArchiveMultiThreaded(t *testing.T) {
 	}
 }
 
+func ExampleWaybackArchive() {
+	domain := "bing.com"
+	source := WaybackArchive{}
+	results := []*core.Result{}
+
+	for result := range source.ProcessDomain(domain) {
+		results = append(results, result)
+	}
+
+	fmt.Println(len(results) >= 1)
+	// Output: true
+}
+
