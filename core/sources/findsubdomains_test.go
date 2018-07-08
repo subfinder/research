@@ -85,3 +85,15 @@ func ExampleFindSubdomainsDotComMultiThreaded() {
 	// Output: true
 }
 
+func BenchmarkFindSubdomainsDotComSingleThreaded(b *testing.B) {
+	domain := "bing.com"
+	source := FindSubdomainsDotCom{}
+
+	for n := 0; n < b.N; n++ {
+		results := []*core.Result{}
+		for result := range source.ProcessDomain(domain) {
+			results = append(results, result)
+		}
+	}
+}
+
