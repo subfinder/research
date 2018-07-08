@@ -46,3 +46,16 @@ func TestCommonCrawlDotOrgMultiThreaded(t *testing.T) {
 	}
 }
 
+func ExampleCommonCrawlDotOrg() {
+	domain := "bing.com"
+	source := CommonCrawlDotOrg{}
+	results := []*core.Result{}
+
+	for result := range source.ProcessDomain(domain) {
+		results = append(results, result)
+	}
+
+	fmt.Println(len(results) >= 3)
+	// Output: true
+}
+
