@@ -47,3 +47,16 @@ func TestArchiveIsMultiThreaded(t *testing.T) {
 	}
 }
 
+func ExampleArchiveIs() {
+	domain := "bing.com"
+	source := ArchiveIs{}
+	results := []*core.Result{}
+
+	for result := range source.ProcessDomain(domain) {
+		results = append(results, result)
+	}
+
+	fmt.Println(len(results) >= 20)
+	// Output: true
+}
+
