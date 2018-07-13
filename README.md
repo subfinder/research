@@ -2,7 +2,7 @@
 > ❄️  Research project for the development of [SubFinder](https://github.com/subfinder/subfinder) core API `v2`
 
 # Installing SubZero
-If you're interested in testing out the alpha version of v2 of SubFinder's command-line application experience (called "SubZero"):
+If you're interested in testing out the alpha version of `v2` of SubFinder's command-line application experience:
 > **Note**: this is alpha software. It's not perfect, and will be eventually merged into SubFinder's main project. This is purely for those interested in early testing to help out with development.
 ```shell
 $ go get -u github.com/subfinder/research/subzero
