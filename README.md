@@ -1,14 +1,14 @@
-# Subzero
+# SubZero
 > ❄️  Research project for the development of [SubFinder](https://github.com/subfinder/subfinder) core API `v2`
 
-#### Install SubZero
-If you're interested in testing out the alpha version of v2 of SubFinder's command-line application experience:
+# Installing SubZero
+If you're interested in testing out the alpha version of v2 of SubFinder's command-line application experience (called "SubZero"):
 > **Note**: this is alpha software. It's not perfect, and will be eventually merged into SubFinder's main project. This is purely for those interested in early testing to help out with development.
 ```shell
-$ go get github.com/subfinder/research/subzero
+$ go get -u github.com/subfinder/research/subzero
 ```
 
-#### Command-Line Usage
+## Command-Line Usage
 You can `enumerate` a domain, like `google.com`, and optionally use the `--verbose` flag for more information.
 Get help for any command to learn about more options.
 ```shell
@@ -25,7 +25,7 @@ Generic (top-level) help menu.
 $ subzero help
 ```
 
-#### Help Menu
+### Help Menu
 
 ```shell
 Usage:
