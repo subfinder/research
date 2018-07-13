@@ -1,5 +1,45 @@
 # Subzero
-❄️  Research project for the development of [SubFinder](https://github.com/subfinder/subfinder) core API `v2`
+> ❄️  Research project for the development of [SubFinder](https://github.com/subfinder/subfinder) core API `v2`
+
+#### Install SubZero
+If you're interested in testing out the alpha version of v2 of SubFinder's command-line application experience:
+> **Note**: this is alpha software. It's not perfect, and will be eventually merged into SubFinder's main project. This is purely for those interested in early testing to help out with development.
+```shell
+$ go get github.com/subfinder/research/subzero
+```
+
+#### Command-Line Usage
+You can `enumerate` a domain, like `google.com`, and optionally use the `--verbose` flag for more information.
+Get help for any command to learn about more options.
+```shell
+$ subzero enumerate google.com --verbose
+```
+
+Get help for any command to learn about more options.
+```shell
+$ subzero help enumerate
+```
+
+Generic (top-level) help menu.
+```shell
+$ subzero help
+```
+
+#### Help Menu
+
+```shell
+Usage:
+  subzero [command]
+
+Available Commands:
+  enumerate   Enumerate subdomains for the given domains.
+  help        Help about any command
+
+Flags:
+  -h, --help   help for subzero
+
+Use "subzero [command] --help" for more information about a command.
+```
 
 #### Run Tests
 ```shell
