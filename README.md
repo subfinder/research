@@ -10,7 +10,6 @@ $ go get -u github.com/subfinder/research/subzero
 
 ## Command-Line Usage
 You can `enumerate` a domain, like `google.com`, and optionally use the `--verbose` flag for more information.
-Get help for any command to learn about more options.
 ```shell
 $ subzero enumerate google.com --verbose
 ```
