@@ -11,14 +11,7 @@ import (
 	core "github.com/subfinder/research/core"
 )
 
-type DnsDbDotCom struct {
-	Name string
-}
-
-// NewDNSDbDotCom creates a new instance of DnsDbDotCom
-func NewDNSDbDotCom() *DnsDbDotCom {
-	return &DnsDbDotCom{Name: "dnsdbdotcom"}
-}
+type DnsDbDotCom struct{}
 
 func (source *DnsDbDotCom) ProcessDomain(domain string) <-chan *core.Result {
 	results := make(chan *core.Result)
@@ -37,7 +30,7 @@ func (source *DnsDbDotCom) ProcessDomain(domain string) <-chan *core.Result {
 
 		resp, err := httpClient.Get("http://www.dnsdb.org/f/" + domain + ".dnsdb.org/")
 		if err != nil {
-			results <- &core.Result{Type: source.Name, Failure: err}
+			results <- &core.Result{Type: "dnsdbdotcom", Failure: err}
 			return
 		}
 		defer resp.Body.Close()
@@ -50,19 +43,15 @@ func (source *DnsDbDotCom) ProcessDomain(domain string) <-chan *core.Result {
 
 		for scanner.Scan() {
 			for _, str := range reDomains.FindAllString(scanner.Text(), -1) {
-				str = cleanSubdomain(str)
+				str = strings.TrimRight(strings.Split(str, "\">")[1], "</a>")
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
-					results <- &core.Result{Type: source.Name, Success: str}
+					results <- &core.Result{Type: "dnsdbdotcom", Success: str}
 				}
 			}
 		}
 
 	}(domain, results)
 	return results
-}
-
-func cleanSubdomain(rawSubdomain string) string {
-	return strings.TrimRight(strings.Split(rawSubdomain, "\">")[1], "</a>")
 }

@@ -11,7 +11,7 @@ import (
 
 func TestDNSDbDotCom(t *testing.T) {
 	domain := "bing.com"
-	source := NewDNSDbDotCom()
+	source := &DnsDbDotCom{}
 	results := []*core.Result{}
 
 	for result := range source.ProcessDomain(domain) {
@@ -25,7 +25,7 @@ func TestDNSDbDotCom(t *testing.T) {
 
 func TestDNSDbDotComMultiThreaded(t *testing.T) {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
-	source := NewDNSDbDotCom()
+	source := &DnsDbDotCom{}
 	results := []*core.Result{}
 
 	wg := sync.WaitGroup{}
@@ -53,7 +53,7 @@ func TestDNSDbDotComMultiThreaded(t *testing.T) {
 
 func ExampleDNSDbDotCom() {
 	domain := "bing.com"
-	source := NewDNSDbDotCom()
+	source := &DnsDbDotCom{}
 	results := []*core.Result{}
 
 	for result := range source.ProcessDomain(domain) {
@@ -66,7 +66,7 @@ func ExampleDNSDbDotCom() {
 
 func ExampleDNSDbDotComMultiThreaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
-	source := NewDNSDbDotCom()
+	source := &DnsDbDotCom{}
 	results := []*core.Result{}
 
 	wg := sync.WaitGroup{}
@@ -92,7 +92,7 @@ func ExampleDNSDbDotComMultiThreaded() {
 
 func BenchmarkDNSDbDotComSingleThreaded(b *testing.B) {
 	domain := "bing.com"
-	source := NewDNSDbDotCom()
+	source := &DnsDbDotCom{}
 
 	for n := 0; n < b.N; n++ {
 		results := []*core.Result{}
@@ -104,7 +104,7 @@ func BenchmarkDNSDbDotComSingleThreaded(b *testing.B) {
 
 func BenchmarkDNSDbDotComMultiThreaded(b *testing.B) {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
-	source := NewDNSDbDotCom()
+	source := &DnsDbDotCom{}
 	wg := sync.WaitGroup{}
 	mx := sync.Mutex{}
 
