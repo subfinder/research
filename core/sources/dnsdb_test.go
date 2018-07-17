@@ -2,7 +2,6 @@ package sources
 
 import (
 	"fmt"
-	"log"
 	"sync"
 	"testing"
 
@@ -37,7 +36,6 @@ func TestDNSDbDotComMultiThreaded(t *testing.T) {
 			defer wg.Done()
 			for result := range source.ProcessDomain(domain) {
 				mx.Lock()
-				log.Println(result.Printable())
 				results = append(results, result)
 				mx.Unlock()
 			}
