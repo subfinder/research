@@ -49,7 +49,7 @@ $ GOCACHE=off go test -v -run=. ./core -race
 ```
 
 # Why?
-That's a great question! Hopefully these reasons will make sense:
+That's a great question, and I hope these reasons will make sense:
 
 * Reduce boilerplate code needed to add or develop new sudomain `Sources`
 * Utilize the [`interface`](https://gobyexample.com/interfaces) type in golang to define our internal API semantics.
