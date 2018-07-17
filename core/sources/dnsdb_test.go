@@ -62,7 +62,7 @@ func ExampleDnsDbDotCom() {
 	// Output: true
 }
 
-func ExampleDnsDbDotComMultiThreaded() {
+func ExampleDnsDbDotCom_multi_threaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := &DnsDbDotCom{}
 	results := []*core.Result{}
