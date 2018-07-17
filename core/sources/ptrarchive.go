@@ -49,7 +49,7 @@ func (source *PTRArchiveDotCom) ProcessDomain(domain string) <-chan *core.Result
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
-					results <- &core.Result{Type: "findsubdomainsdotcom", Success: str}
+					results <- &core.Result{Type: "ptrarchivedotcom", Success: str}
 				}
 			}
 		}
