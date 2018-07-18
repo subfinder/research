@@ -52,7 +52,7 @@ func main() {
 		Args:  cobra.MinimumNArgs(1),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			if cmdEnumerateInsecureOpt {
-				sourcesList = append(sourcesList, &sources.PTRArchive{})
+				sourcesList = append(sourcesList, &sources.PTRArchiveDotCom{})
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
