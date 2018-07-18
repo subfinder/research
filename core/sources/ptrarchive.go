@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 
 	core "github.com/subfinder/research/core"
@@ -46,6 +47,7 @@ func (source *PTRArchiveDotCom) ProcessDomain(domain string) <-chan *core.Result
 
 		for scanner.Scan() {
 			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
+				str = strings.Split(str, " ")[1]
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
