@@ -1,8 +1,8 @@
 <p align="center">
   <img alt="logo" height="120" src="https://github.com/subfinder/research/blob/master/logo.png"/>
-  <b>Project SubZero</b>
-  > ❄️  Research project for the development of [SubFinder](https://github.com/subfinder/subfinder) core API `v2`
+  <div><b>Project SubZero</b></div>
 <p>
+> ❄️  Research project for the development of [SubFinder](https://github.com/subfinder/subfinder) core API `v2`
 
 # Installing SubZero
 If you're interested in testing out the alpha version of SubFinder's next command-line application experience:
