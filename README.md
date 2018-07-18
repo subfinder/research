@@ -1,7 +1,8 @@
 <p align="center">
   <img alt="logo" height="120" src="https://github.com/subfinder/research/blob/master/logo.png"/>
-  <div><b>Project SubZero</b></div>
 <p>
+
+# SubZero
 > ❄️  Research project for the development of [SubFinder](https://github.com/subfinder/subfinder) core API `v2`
 
 # Installing SubZero
