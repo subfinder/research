@@ -19,8 +19,7 @@ var sourcesList = []core.Source{
 	&sources.Riddler{},
 	&sources.Threatminer{},
 	&sources.WaybackArchive{},
-  &sources.DnsDbDotCom{},
-	&sources.PTRArchive{},
+	&sources.DnsDbDotCom{},
 }
 
 func Enumerate(domain string) chan *core.Result {
@@ -45,11 +44,17 @@ func Enumerate(domain string) chan *core.Result {
 func main() {
 	jobs := sync.WaitGroup{}
 	var cmdEnumerateVerboseOpt bool
+	var cmdEnumerateInsecureOpt bool
 
 	var cmdEnumerate = &cobra.Command{
 		Use:   "enumerate [domains to enumerate]",
 		Short: "Enumerate subdomains for the given domains.",
 		Args:  cobra.MinimumNArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			if cmdEnumerateInsecureOpt {
+				sourcesList = append(sourcesList, &sources.PTRArchive{})
+			}
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, domain := range args {
 				jobs.Add(1)
@@ -67,6 +72,7 @@ func main() {
 		},
 	}
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateVerboseOpt, "verbose", false, "Show errors and other available diagnostic information.")
+	cmdEnumerate.Flags().BoolVar(&cmdEnumerateInsecureOpt, "insecure", false, "Use potentially insecure sources using http.")
 
 	var rootCmd = &cobra.Command{Use: "subzero"}
 	rootCmd.AddCommand(cmdEnumerate)
