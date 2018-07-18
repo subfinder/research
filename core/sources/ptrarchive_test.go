@@ -59,7 +59,7 @@ func ExamplePTRArchiveDotCom() {
 	// Output: true
 }
 
-func ExamplePTRArchiveDotComMultiThreaded() {
+func ExamplePTRArchiveDotCom_multi_threaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := FindSubdomainsDotCom{}
 	results := []*core.Result{}
