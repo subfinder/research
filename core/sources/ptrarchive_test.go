@@ -61,7 +61,7 @@ func ExamplePTRArchiveDotCom() {
 
 func ExamplePTRArchiveDotCom_multi_threaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
-	source := FindSubdomainsDotCom{}
+	source := PTRArchiveDotCom{}
 	results := []*core.Result{}
 
 	wg := sync.WaitGroup{}
@@ -87,7 +87,7 @@ func ExamplePTRArchiveDotCom_multi_threaded() {
 
 func BenchmarkPTRArchiveDotComSingleThreaded(b *testing.B) {
 	domain := "bing.com"
-	source := FindSubdomainsDotCom{}
+	source := PTRArchiveDotCom{}
 
 	for n := 0; n < b.N; n++ {
 		results := []*core.Result{}
@@ -99,7 +99,7 @@ func BenchmarkPTRArchiveDotComSingleThreaded(b *testing.B) {
 
 func BenchmarkPTRArchiveDotComMultiThreaded(b *testing.B) {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
-	source := FindSubdomainsDotCom{}
+	source := PTRArchiveDotCom{}
 	wg := sync.WaitGroup{}
 	mx := sync.Mutex{}
 
