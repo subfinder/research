@@ -1,6 +1,10 @@
 # SubZero
 > ❄️  Research project for the development of [SubFinder](https://github.com/subfinder/subfinder) core API `v2`
 
+<p align="center">
+  <img alt="logo" height="120" src="https://github.com/subfinder/research/blob/master/logo.png"/>
+<p>
+
 # Installing SubZero
 If you're interested in testing out the alpha version of SubFinder's next command-line application experience:
 > **Note**: this is alpha software. It's not perfect, and will be eventually merged into SubFinder's main project. This is purely for those interested in early testing to help out with development.
