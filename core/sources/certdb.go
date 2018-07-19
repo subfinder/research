@@ -7,3 +7,5 @@ import "time"
 import "bufio"
 import "regexp"
 
+type CertDB struct{}
+
