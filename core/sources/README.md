@@ -1,7 +1,7 @@
 # Sources
 SubFinder is built using freely available sources found online.
 
-# Support Sources
+# Supported Sources
 * TODO
 
 # Adding Sources
@@ -14,7 +14,7 @@ type Source interface {
 }
 ```
 
-### Example Source
+## Example Source
 This is a simple source called `ExampleSource`. It has three hard-coded subdomains that will be concatenated with the given `domain` that will be sent down the `results` channel to be consumed later on. In practically all cases, it should be noted, sources will make HTTP(s) requests to external websites to actually find subdomains.
 ```go
 package sources 
@@ -36,4 +36,3 @@ func (source *ExampleSource) ProcessDomain(domain string) <-chan *Result {
   return results
 }
 ```
-
