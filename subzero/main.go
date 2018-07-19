@@ -22,7 +22,7 @@ var sourcesList = []core.Source{
 	&sources.DnsDbDotCom{},
 }
 
-func Enumerate(domain string) chan *core.Result {
+func enumerate(domain string) chan *core.Result {
 	wg := sync.WaitGroup{}
 	results := make(chan *core.Result, len(sourcesList)*4)
 	go func(domain string) {
@@ -60,7 +60,7 @@ func main() {
 				jobs.Add(1)
 				go func(domain string) {
 					defer jobs.Done()
-					for result := range Enumerate(domain) {
+					for result := range enumerate(domain) {
 						if result.Failure != nil && cmdEnumerateVerboseOpt {
 							fmt.Println(result.Type, result.Failure)
 						} else {
