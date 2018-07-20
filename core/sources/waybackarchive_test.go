@@ -16,9 +16,9 @@ func TestWaybackArchive(t *testing.T) {
 	for result := range source.ProcessDomain(domain) {
 		results = append(results, result)
 		if result.Failure != nil {
-			failure += 1
+			failure++
 		} else {
-			success += 1
+			success++
 		}
 	}
 
