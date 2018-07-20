@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"net"
 	"net/http"
-	"regexp"
-	"strings"
 	"time"
 
 	core "github.com/subfinder/research/core"
@@ -28,6 +26,14 @@ func (source *DnsDbDotCom) ProcessDomain(domain string) <-chan *core.Result {
 			},
 		}
 
+		domainExtractor, err := core.NewSubdomainExtractor(domain)
+		if err != nil {
+			results <- &core.Result{Type: "dnsdbdotcom", Failure: err}
+			return
+		}
+
+		uniqFilter := map[string]bool{}
+
 		resp, err := httpClient.Get("http://www.dnsdb.org/f/" + domain + ".dnsdb.org/")
 		if err != nil {
 			results <- &core.Result{Type: "dnsdbdotcom", Failure: err}
@@ -35,15 +41,10 @@ func (source *DnsDbDotCom) ProcessDomain(domain string) <-chan *core.Result {
 		}
 		defer resp.Body.Close()
 
-		reDomains := regexp.MustCompile("<a[^>]*?[^>]*>(.*?)</a>")
-
-		uniqFilter := map[string]bool{}
-
 		scanner := bufio.NewScanner(resp.Body)
 
 		for scanner.Scan() {
-			for _, str := range reDomains.FindAllString(scanner.Text(), -1) {
-				str = strings.TrimRight(strings.Split(str, "\">")[1], "</a>")
+			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
