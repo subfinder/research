@@ -27,9 +27,16 @@ func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 			},
 		}
 
+		domainExtractor, err := core.NewSubdomainExtractor(domain)
+		if err != nil {
+			results <- &core.Result{Type: "hackertarget", Failure: err}
+			return
+		}
+
+		uniqFilter := map[string]bool{}
+
 		// get response from the API, optionally with an API key
 		var resp *http.Response
-		var err error
 
 		// check API key
 		if source.APIKey != "" {
@@ -49,9 +56,15 @@ func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 		for scanner.Scan() {
 			str := strings.Split(scanner.Text(), ",")[0]
 			if strings.Contains(str, "API count exceeded") {
-				results <- &core.Result{Type: "hacker target", Failure: errors.New(str)}
+				results <- &core.Result{Type: "hackertarget", Failure: errors.New(str)}
 			} else {
-				results <- &core.Result{Type: "hacker target", Success: str}
+				for _, str := range domainExtractor.FindAllString(str, -1) {
+					_, found := uniqFilter[str]
+					if !found {
+						uniqFilter[str] = true
+						results <- &core.Result{Type: "hackertarget", Success: str}
+					}
+				}
 			}
 		}
 	}(domain, results)
