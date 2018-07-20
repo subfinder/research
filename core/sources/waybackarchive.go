@@ -6,8 +6,6 @@ import "net"
 import "time"
 import "bufio"
 import "bytes"
-import "regexp"
-import "strings"
 
 type WaybackArchive struct{}
 
@@ -26,6 +24,14 @@ func (source *WaybackArchive) ProcessDomain(domain string) <-chan *core.Result {
 			},
 		}
 
+		domainExtractor, err := core.NewSubdomainExtractor(domain)
+		if err != nil {
+			results <- &core.Result{Type: "wayback archive", Failure: err}
+			return
+		}
+
+		uniqFilter := map[string]bool{}
+
 		resp, err := httpClient.Get("http://web.archive.org/cdx/search/cdx?url=*." + domain + "/*&output=json&fl=original&collapse=urlkey")
 		if err != nil {
 			results <- &core.Result{Type: "wayback archive", Failure: err}
@@ -33,36 +39,21 @@ func (source *WaybackArchive) ProcessDomain(domain string) <-chan *core.Result {
 		}
 		defer resp.Body.Close()
 
-		domainExtractor, err := regexp.Compile(`(http|https)://\S+` + domain)
-		if err != nil {
-			results <- &core.Result{Type: "wayback archive", Failure: err}
-			return
-		}
-
 		scanner := bufio.NewScanner(resp.Body)
 
 		scanner.Split(bufio.ScanBytes)
 
 		jsonBuffer := bytes.Buffer{}
 
-		uniqFilter := map[string]bool{}
-
 		for scanner.Scan() {
 			if scanner.Bytes()[0] == 44 { // if ","
 				str := string(jsonBuffer.Bytes())
 				jsonBuffer.Reset()
 				str = domainExtractor.FindString(str)
-				// a little extra finesse to message out the
-				// actual subdomain from the string
-				if str != "" {
-					str = strings.Split(str, "://")[1]
-					str = strings.Split(str, "/")[0]
-					str = strings.Split(str, ":")[0]
-					_, found := uniqFilter[str]
-					if !found {
-						uniqFilter[str] = true
-						results <- &core.Result{Type: "wayback archive", Success: str}
-					}
+				_, found := uniqFilter[str]
+				if !found {
+					uniqFilter[str] = true
+					results <- &core.Result{Type: "wayback archive", Success: str}
 				}
 			} else {
 				jsonBuffer.Write(scanner.Bytes())
