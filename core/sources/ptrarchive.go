@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"net"
 	"net/http"
-	"regexp"
-	"strings"
 	"time"
 
 	core "github.com/subfinder/research/core"
@@ -28,14 +26,7 @@ func (source *PTRArchiveDotCom) ProcessDomain(domain string) <-chan *core.Result
 			},
 		}
 
-		resp, err := httpClient.Get("http://ptrarchive.com/tools/search3.htm?label=" + domain + "&date=ALL")
-		if err != nil {
-			results <- &core.Result{Type: "ptrarchivedotcom", Failure: err}
-			return
-		}
-		defer resp.Body.Close()
-
-		domainExtractor, err := regexp.Compile("] (.*) \\[")
+		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			results <- &core.Result{Type: "ptrarchivedotcom", Failure: err}
 			return
@@ -43,11 +34,17 @@ func (source *PTRArchiveDotCom) ProcessDomain(domain string) <-chan *core.Result
 
 		uniqFilter := map[string]bool{}
 
+		resp, err := httpClient.Get("http://ptrarchive.com/tools/search3.htm?label=" + domain + "&date=ALL")
+		if err != nil {
+			results <- &core.Result{Type: "ptrarchivedotcom", Failure: err}
+			return
+		}
+		defer resp.Body.Close()
+
 		scanner := bufio.NewScanner(resp.Body)
 
 		for scanner.Scan() {
 			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				str = strings.Split(str, " ")[1]
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
