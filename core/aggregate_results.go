@@ -1,4 +1,4 @@
-package subzero
+package core
 
 // AggregateSuccessfulResults takes a given results channel as input
 // and only sends successful results down the returned output channel.

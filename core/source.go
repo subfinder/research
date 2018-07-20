@@ -1,4 +1,4 @@
-package subzero
+package core
 
 // Source defines the minimum interface any
 // subdomain enumeration module should follow.

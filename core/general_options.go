@@ -1,4 +1,4 @@
-package subzero
+package core
 
 import "runtime"
 import "time"
