@@ -5,7 +5,6 @@ import "net/http"
 import "net"
 import "time"
 import "bufio"
-import "regexp"
 
 type CommonCrawlDotOrg struct{}
 
@@ -31,7 +30,7 @@ func (source *CommonCrawlDotOrg) ProcessDomain(domain string) <-chan *core.Resul
 		}
 		defer resp.Body.Close()
 
-		domainExtractor, err := regexp.Compile(`((\w|_|-|\*)+\.)+` + domain)
+		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			results <- &core.Result{Type: "commoncrawldotorg", Failure: err}
 			return
