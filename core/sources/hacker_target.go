@@ -12,34 +12,6 @@ type HackerTarget struct {
 	APIKey string
 }
 
-func (source *HackerTarget) IsOverFreeLimit() bool {
-	httpClient := &http.Client{
-		Timeout: time.Second * 4,
-		Transport: &http.Transport{
-			Dial: (&net.Dialer{
-				Timeout: 5 * time.Second,
-			}).Dial,
-			TLSHandshakeTimeout: 5 * time.Second,
-		},
-	}
-
-	// get response from the API
-	resp, err := httpClient.Get("https://api.hackertarget.com/hostsearch/?q=")
-	if err != nil {
-		return true
-	}
-	defer resp.Body.Close()
-
-	scanner := bufio.NewScanner(resp.Body)
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), "API count exceeded") {
-			return true
-		}
-		break
-	}
-	return false
-}
-
 func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 	results := make(chan *core.Result)
 	go func(domain string, results chan *core.Result) {
