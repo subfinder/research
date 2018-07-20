@@ -1,12 +1,15 @@
 package sources
 
-import core "github.com/subfinder/research/core"
-import "net/http"
-import "net"
-import "time"
-import "encoding/json"
-import "bufio"
-import "bytes"
+import (
+	"bufio"
+	"bytes"
+	"encoding/json"
+	"net"
+	"net/http"
+	"time"
+
+	core "github.com/subfinder/research/core"
+)
 
 type CrtSh struct{}
 

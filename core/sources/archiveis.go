@@ -23,6 +23,14 @@ func (source *ArchiveIs) ProcessDomain(domain string) <-chan *core.Result {
 			},
 		}
 
+		domainExtractor, err := core.NewSubdomainExtractor(domain)
+		if err != nil {
+			results <- &core.Result{Type: "archiveis", Failure: err}
+			return
+		}
+
+		uniqFilter := map[string]bool{}
+
 		resp, err := httpClient.Get("http://archive.is/*." + domain)
 		if err != nil {
 			results <- &core.Result{Type: "archiveis", Failure: err}
@@ -30,17 +38,15 @@ func (source *ArchiveIs) ProcessDomain(domain string) <-chan *core.Result {
 		}
 		defer resp.Body.Close()
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			results <- &core.Result{Type: "archiveis", Failure: err}
-			return
-		}
-
 		scanner := bufio.NewScanner(resp.Body)
 
 		for scanner.Scan() {
 			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				results <- &core.Result{Type: "archiveis", Success: str}
+				_, found := uniqFilter[str]
+				if !found {
+					uniqFilter[str] = true
+					results <- &core.Result{Type: "archiveis", Success: str}
+				}
 			}
 		}
 	}(domain, results)

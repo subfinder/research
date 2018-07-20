@@ -11,6 +11,7 @@ func TestCertSpotter(t *testing.T) {
 	results := []*core.Result{}
 
 	for result := range source.ProcessDomain(domain) {
+		t.Log(result.Success)
 		if result.IsFailure() {
 			t.Fatal(result.Failure)
 		}

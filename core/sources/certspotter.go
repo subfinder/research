@@ -1,11 +1,13 @@
 package sources
 
-import core "github.com/subfinder/research/core"
-import "net/http"
-import "net"
-import "time"
+import (
+	"bufio"
+	"net"
+	"net/http"
+	"time"
 
-import "encoding/json"
+	core "github.com/subfinder/research/core"
+)
 
 type CertSpotter struct{}
 
@@ -44,24 +46,18 @@ func (source *CertSpotter) ProcessDomain(domain string) <-chan *core.Result {
 		}
 		defer resp.Body.Close()
 
-		certspotterData := []*certspotterObject{}
-		err = json.NewDecoder(resp.Body).Decode(&certspotterData)
-		if err != nil {
-			results <- &core.Result{Type: "certspotter", Failure: err}
-			return
-		}
-		for _, block := range certspotterData {
-			for _, dnsName := range block.DNSNames {
-				// This could potentially be made more efficient.
-				for _, str := range domainExtractor.FindAllString(dnsName, -1) {
-					_, found := uniqFilter[str]
-					if !found {
-						uniqFilter[str] = true
-						results <- &core.Result{Type: "certspotter", Success: str}
-					}
+		scanner := bufio.NewScanner(resp.Body)
+
+		for scanner.Scan() {
+			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
+				_, found := uniqFilter[str]
+				if !found {
+					uniqFilter[str] = true
+					results <- &core.Result{Type: "threatminer", Success: str}
 				}
 			}
 		}
+
 	}(domain, results)
 	return results
 }
