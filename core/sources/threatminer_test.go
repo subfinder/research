@@ -19,7 +19,7 @@ func TestThreatminer(t *testing.T) {
 	}
 }
 
-func TestThreatminerMultiThreaded(t *testing.T) {
+func TestThreatminer_multi_threaded(t *testing.T) {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := Threatminer{}
 	results := []*core.Result{}
@@ -59,7 +59,7 @@ func ExampleThreatminer() {
 	// Output: true
 }
 
-func ExampleThreatminerMultiThreaded() {
+func ExampleThreatminer_multi_threaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := Threatminer{}
 	results := []*core.Result{}
