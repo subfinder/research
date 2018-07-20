@@ -5,8 +5,6 @@ import "net/http"
 import "net"
 import "time"
 import "bufio"
-import "regexp"
-import "strings"
 
 type Threatminer struct{}
 
@@ -25,11 +23,13 @@ func (source *Threatminer) ProcessDomain(domain string) <-chan *core.Result {
 			},
 		}
 
-		domainExtractor, err := regexp.Compile("q=([a-zA-Z0-9\\*_.-]+\\." + domain + ")")
+		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			results <- &core.Result{Type: "threatminer", Failure: err}
 			return
 		}
+
+		uniqFilter := map[string]bool{}
 
 		resp, err := httpClient.Get("https://www.threatminer.org/getData.php?e=subdomains_container&q=" + domain + "&t=0&rt=10&p=1")
 		if err != nil {
@@ -44,9 +44,9 @@ func (source *Threatminer) ProcessDomain(domain string) <-chan *core.Result {
 
 		for scanner.Scan() {
 			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				strParts := strings.Split(str, "q=")
-				if len(strParts) >= 1 {
-					str = strings.Join(strParts[:len(strParts)], "")
+				_, found := uniqFilter[str]
+				if !found {
+					uniqFilter[str] = true
 					results <- &core.Result{Type: "threatminer", Success: str}
 				}
 			}
