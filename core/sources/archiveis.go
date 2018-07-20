@@ -5,8 +5,6 @@ import "net/http"
 import "net"
 import "time"
 import "bufio"
-import "regexp"
-import "strings"
 
 type ArchiveIs struct{}
 
@@ -32,7 +30,7 @@ func (source *ArchiveIs) ProcessDomain(domain string) <-chan *core.Result {
 		}
 		defer resp.Body.Close()
 
-		domainExtractor, err := regexp.Compile(`(http|https)://((\w|_|-|\*)+\.)+` + domain)
+		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			results <- &core.Result{Type: "archiveis", Failure: err}
 			return
@@ -42,7 +40,6 @@ func (source *ArchiveIs) ProcessDomain(domain string) <-chan *core.Result {
 
 		for scanner.Scan() {
 			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				str = strings.Split(str, "://")[1]
 				results <- &core.Result{Type: "archiveis", Success: str}
 			}
 		}
