@@ -14,8 +14,8 @@ func TestCrtSh(t *testing.T) {
 		results = append(results, result)
 	}
 
-	if !(len(results) >= 500) {
-		t.Errorf("expected more than 500 result(s), got '%v'", len(results))
+	if !(len(results) >= 90) {
+		t.Errorf("expected more than 90 result(s), got '%v'", len(results))
 	}
 }
 
@@ -41,8 +41,8 @@ func TestCrtSh_MultiThreaded(t *testing.T) {
 
 	wg.Wait() // collect results
 
-	if len(results) < 1180 {
-		t.Errorf("expected more than 1180 results, got '%v'", len(results))
+	if len(results) < 200 {
+		t.Errorf("expected more than 200 results, got '%v'", len(results))
 	}
 }
 
@@ -55,11 +55,11 @@ func ExampleCrtSh() {
 		results = append(results, result)
 	}
 
-	fmt.Println(len(results) >= 500)
+	fmt.Println(len(results) >= 90)
 	// Output: true
 }
 
-func ExampleCrtSh_MultiThreaded() {
+func ExampleCrtSh_multi_threaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := CrtSh{}
 	results := []*core.Result{}
@@ -81,7 +81,7 @@ func ExampleCrtSh_MultiThreaded() {
 
 	wg.Wait() // collect results
 
-	fmt.Println(len(results) >= 1000)
+	fmt.Println(len(results) >= 200)
 	// Output: true
 }
 
