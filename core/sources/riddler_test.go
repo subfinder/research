@@ -19,7 +19,7 @@ func TestRiddler(t *testing.T) {
 	}
 }
 
-func TestRiddlerMultiThreaded(t *testing.T) {
+func TestRiddler_multi_threaded(t *testing.T) {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := Riddler{}
 	results := []*core.Result{}
@@ -59,7 +59,7 @@ func ExampleRiddler() {
 	// Output: true
 }
 
-func ExampleRiddlerMultiThreaded() {
+func ExampleRiddler_multi_threaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := Riddler{}
 	results := []*core.Result{}
