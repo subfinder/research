@@ -19,7 +19,7 @@ func TestCommonCrawlDotOrg(t *testing.T) {
 	}
 }
 
-func TestCommonCrawlDotOrgMultiThreaded(t *testing.T) {
+func TestCommonCrawlDotOrg_multi_threaded(t *testing.T) {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := CommonCrawlDotOrg{}
 	results := []*core.Result{}
@@ -59,7 +59,7 @@ func ExampleCommonCrawlDotOrg() {
 	// Output: true
 }
 
-func ExampleCommonCrawlDotOrgMultiThreaded() {
+func ExampleCommonCrawlDotOrg_multi_threaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := CommonCrawlDotOrg{}
 	results := []*core.Result{}
