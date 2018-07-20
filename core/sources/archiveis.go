@@ -1,10 +1,13 @@
 package sources
 
-import core "github.com/subfinder/research/core"
-import "net/http"
-import "net"
-import "time"
-import "bufio"
+import (
+	"bufio"
+	"net"
+	"net/http"
+	"time"
+
+	core "github.com/subfinder/research/core"
+)
 
 type ArchiveIs struct{}
 
