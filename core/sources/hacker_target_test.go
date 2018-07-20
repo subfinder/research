@@ -6,14 +6,6 @@ import "fmt"
 import "sync"
 import "strings"
 
-func TestIsOverFreeLimit(t *testing.T) {
-	source := HackerTarget{}
-
-	if source.IsOverFreeLimit() {
-		t.Log("warning: the tests will be ran with API request limit hit")
-	}
-}
-
 func TestHackerTarget(t *testing.T) {
 	domain := "google.com"
 	source := HackerTarget{}
@@ -34,7 +26,7 @@ func TestHackerTarget(t *testing.T) {
 	}
 }
 
-func TestHackerTarget_MultiThreaded(t *testing.T) {
+func TestHackerTarget_multi_threaded(t *testing.T) {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := HackerTarget{}
 	results := []*core.Result{}
@@ -80,7 +72,7 @@ func ExampleHackerTarget() {
 	// Output: true
 }
 
-func ExampleHackerTargetMultiThreaded() {
+func ExampleHackerTarget_multi_threaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := HackerTarget{}
 	results := []*core.Result{}
