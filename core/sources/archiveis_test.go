@@ -60,7 +60,7 @@ func ExampleArchiveIs() {
 	// Output: true
 }
 
-func ExampleArchiveIsMultiThreaded() {
+func ExampleArchiveIs_multi_threaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := ArchiveIs{}
 	results := []*core.Result{}
