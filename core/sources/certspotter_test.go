@@ -17,7 +17,7 @@ func TestCertSpotter(t *testing.T) {
 		results = append(results, result)
 	}
 
-	if !(len(results) >= 5000) {
+	if !(len(results) >= 3000) {
 		t.Errorf("expected more than 5000 results, got '%v'", len(results))
 	}
 }
@@ -44,8 +44,8 @@ func TestCertSpotter_MultiThreaded(t *testing.T) {
 
 	wg.Wait() // collect results
 
-	if len(results) < 67000 {
-		t.Errorf("expected more than 67000 results, got '%v'", len(results))
+	if len(results) < 6000 {
+		t.Errorf("expected more than 23000 results, got '%v'", len(results))
 	}
 }
 
@@ -58,11 +58,11 @@ func ExampleCertSpotter() {
 		results = append(results, result)
 	}
 
-	fmt.Println(len(results) >= 5000)
+	fmt.Println(len(results) >= 3000)
 	// Output: true
 }
 
-func ExampleCertSpotter_MultiThreaded() {
+func ExampleCertSpotter_multi_threaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := CertSpotter{}
 	results := []*core.Result{}
@@ -84,7 +84,7 @@ func ExampleCertSpotter_MultiThreaded() {
 
 	wg.Wait() // collect results
 
-	fmt.Println(len(results) > 67000)
+	fmt.Println(len(results) > 6000)
 	// Output: true
 }
 
