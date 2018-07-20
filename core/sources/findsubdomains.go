@@ -5,7 +5,6 @@ import "net/http"
 import "net"
 import "time"
 import "bufio"
-import "regexp"
 
 type FindSubdomainsDotCom struct{}
 
@@ -24,20 +23,20 @@ func (source *FindSubdomainsDotCom) ProcessDomain(domain string) <-chan *core.Re
 			},
 		}
 
-		resp, err := httpClient.Get("https://findsubdomains.com/subdomains-of/" + domain)
-		if err != nil {
-			results <- &core.Result{Type: "findsubdomainsdotcom", Failure: err}
-			return
-		}
-		defer resp.Body.Close()
-
-		domainExtractor, err := regexp.Compile(`((\w|_|-|\*)+\.)+` + domain)
+		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			results <- &core.Result{Type: "findsubdomainsdotcom", Failure: err}
 			return
 		}
 
 		uniqFilter := map[string]bool{}
+
+		resp, err := httpClient.Get("https://findsubdomains.com/subdomains-of/" + domain)
+		if err != nil {
+			results <- &core.Result{Type: "findsubdomainsdotcom", Failure: err}
+			return
+		}
+		defer resp.Body.Close()
 
 		scanner := bufio.NewScanner(resp.Body)
 
