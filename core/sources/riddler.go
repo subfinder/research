@@ -96,8 +96,15 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 			},
 		}
 
+		domainExtractor, err := core.NewSubdomainExtractor(domain)
+		if err != nil {
+			results <- &core.Result{Type: "certspotter", Failure: err}
+			return
+		}
+
+		uniqFilter := map[string]bool{}
+
 		var resp *http.Response
-		var err error
 
 		if source.APIToken != "" {
 			query := strings.NewReader(`{"query": "pld:` + domain + `", "output": "host", "limit": 500}`)
@@ -125,7 +132,13 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 			}
 
 			for _, r := range hostResponse {
-				results <- &core.Result{Type: "riddler", Success: r.Host}
+				for _, str := range domainExtractor.FindAllString(r.Host, -1) {
+					_, found := uniqFilter[str]
+					if !found {
+						uniqFilter[str] = true
+						results <- &core.Result{Type: "certspotter", Success: str}
+					}
+				}
 			}
 			return
 		}
@@ -138,16 +151,16 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 				return
 			}
 			defer resp.Body.Close()
+
 			scanner := bufio.NewScanner(resp.Body)
-			counter := 0
+
 			for scanner.Scan() {
-				if counter <= 2 {
-					counter += 1
-					continue // skip first two lines
-				}
-				strParts := strings.Split(scanner.Text(), ",")
-				if (len(strParts) >= 6) && strings.Contains(strParts[5], domain) {
-					results <- &core.Result{Type: "riddler", Success: strParts[5]}
+				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
+					_, found := uniqFilter[str]
+					if !found {
+						uniqFilter[str] = true
+						results <- &core.Result{Type: "certspotter", Success: str}
+					}
 				}
 			}
 			return
