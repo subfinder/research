@@ -4,7 +4,7 @@ import core "github.com/subfinder/research/core"
 import "net/http"
 import "net"
 import "time"
-import "strings"
+
 import "encoding/json"
 
 type CertSpotter struct{}
@@ -28,6 +28,14 @@ func (source *CertSpotter) ProcessDomain(domain string) <-chan *core.Result {
 			},
 		}
 
+		domainExtractor, err := core.NewSubdomainExtractor(domain)
+		if err != nil {
+			results <- &core.Result{Type: "certspotter", Failure: err}
+			return
+		}
+
+		uniqFilter := map[string]bool{}
+
 		// get response from the API, optionally with an API key
 		resp, err := httpClient.Get("https://certspotter.com/api/v0/certs?domain=" + domain)
 		if err != nil {
@@ -44,11 +52,14 @@ func (source *CertSpotter) ProcessDomain(domain string) <-chan *core.Result {
 		}
 		for _, block := range certspotterData {
 			for _, dnsName := range block.DNSNames {
-				// Fix Wildcard subdomains containing asterisk before them
-				if strings.Contains(dnsName, "*.") {
-					dnsName = strings.Split(dnsName, "*.")[1]
+				// This could potentially be made more efficient.
+				for _, str := range domainExtractor.FindAllString(dnsName, -1) {
+					_, found := uniqFilter[str]
+					if !found {
+						uniqFilter[str] = true
+						results <- &core.Result{Type: "certspotter", Success: str}
+					}
 				}
-				results <- &core.Result{Type: "certspotter", Success: dnsName}
 			}
 		}
 	}(domain, results)
