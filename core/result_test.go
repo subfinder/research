@@ -594,10 +594,10 @@ func BenchmarkNewResultMultiThreaded(b *testing.B) {
 	wg := sync.WaitGroup{}
 	for n := 0; n < b.N; n++ {
 		wg.Add(1)
-		go func() {
+		go func(n int) {
 			defer wg.Done()
 			NewResult("example", n, nil)
-		}()
+		}(n)
 	}
 	wg.Wait()
 }
@@ -642,10 +642,10 @@ func BenchmarkInitializeSuccessResultMulitThreaded(b *testing.B) {
 	wg := sync.WaitGroup{}
 	for n := 0; n < b.N; n++ {
 		wg.Add(1)
-		go func() {
+		go func(n int) {
 			defer wg.Done()
 			_ = Result{Type: "example", Success: n}
-		}()
+		}(n)
 	}
 	wg.Wait()
 }
@@ -666,10 +666,10 @@ func BenchmarkInitializeSuccessPointerToResultMulitThreaded(b *testing.B) {
 	wg := sync.WaitGroup{}
 	for n := 0; n < b.N; n++ {
 		wg.Add(1)
-		go func() {
+		go func(n int) {
 			defer wg.Done()
 			_ = &Result{Type: "example", Success: n}
-		}()
+		}(n)
 	}
 	wg.Wait()
 }
