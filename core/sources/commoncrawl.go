@@ -25,13 +25,6 @@ func (source *CommonCrawlDotOrg) ProcessDomain(domain string) <-chan *core.Resul
 			},
 		}
 
-		resp, err := httpClient.Get("http://index.commoncrawl.org/CC-MAIN-2018-17-index?url=*." + domain + "&output=json")
-		if err != nil {
-			results <- core.NewResult("commoncrawldotorg", nil, err)
-			return
-		}
-		defer resp.Body.Close()
-
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			results <- core.NewResult("commoncrawldotorg", nil, err)
@@ -39,6 +32,13 @@ func (source *CommonCrawlDotOrg) ProcessDomain(domain string) <-chan *core.Resul
 		}
 
 		uniqFilter := map[string]bool{}
+
+		resp, err := httpClient.Get("http://index.commoncrawl.org/CC-MAIN-2018-17-index?url=*." + domain + "&output=json")
+		if err != nil {
+			results <- core.NewResult("commoncrawldotorg", nil, err)
+			return
+		}
+		defer resp.Body.Close()
 
 		scanner := bufio.NewScanner(resp.Body)
 
