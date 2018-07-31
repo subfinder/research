@@ -12,10 +12,6 @@ import (
 // CertSpotter is a source to process subdomains from https://certspotter.com
 type CertSpotter struct{}
 
-type certspotterObject struct {
-	DNSNames []string `json:"dns_names"`
-}
-
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *CertSpotter) ProcessDomain(domain string) <-chan *core.Result {
 	results := make(chan *core.Result)
