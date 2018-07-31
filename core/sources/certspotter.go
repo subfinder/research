@@ -34,7 +34,7 @@ func (source *CertSpotter) ProcessDomain(domain string) <-chan *core.Result {
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- &core.Result{Type: "certspotter", Failure: err}
+			results <- core.NewResult("certspotter", nil, err)
 			return
 		}
 
@@ -43,7 +43,7 @@ func (source *CertSpotter) ProcessDomain(domain string) <-chan *core.Result {
 		// get response from the API, optionally with an API key
 		resp, err := httpClient.Get("https://certspotter.com/api/v0/certs?domain=" + domain)
 		if err != nil {
-			results <- &core.Result{Type: "certspotter", Failure: err}
+			results <- core.NewResult("certspotter", nil, err)
 			return
 		}
 		defer resp.Body.Close()
@@ -55,7 +55,7 @@ func (source *CertSpotter) ProcessDomain(domain string) <-chan *core.Result {
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
-					results <- &core.Result{Type: "threatminer", Success: str}
+					results <- core.NewResult("certspotter", str, nil)
 				}
 			}
 		}

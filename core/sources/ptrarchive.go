@@ -30,7 +30,7 @@ func (source *PTRArchiveDotCom) ProcessDomain(domain string) <-chan *core.Result
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- &core.Result{Type: "ptrarchivedotcom", Failure: err}
+			results <- core.NewResult("ptrarchivedotcom", nil, err)
 			return
 		}
 
@@ -38,7 +38,7 @@ func (source *PTRArchiveDotCom) ProcessDomain(domain string) <-chan *core.Result
 
 		resp, err := httpClient.Get("http://ptrarchive.com/tools/search3.htm?label=" + domain + "&date=ALL")
 		if err != nil {
-			results <- &core.Result{Type: "ptrarchivedotcom", Failure: err}
+			results <- core.NewResult("ptrarchivedotcom", nil, err)
 			return
 		}
 		defer resp.Body.Close()
@@ -50,7 +50,7 @@ func (source *PTRArchiveDotCom) ProcessDomain(domain string) <-chan *core.Result
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
-					results <- &core.Result{Type: "ptrarchivedotcom", Success: str}
+					results <- core.NewResult("ptrarchivedotcom", str, nil)
 				}
 			}
 		}

@@ -83,7 +83,7 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 		if source.APIToken == "" && source.Email != "" && source.Password != "" {
 			_, err := source.Authenticate()
 			if err != nil {
-				results <- &core.Result{Type: "riddler", Failure: err}
+				results <- core.NewResult("riddler", nil, err)
 				return
 			}
 		}
@@ -100,7 +100,7 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- &core.Result{Type: "certspotter", Failure: err}
+			results <- core.NewResult("riddler", nil, err)
 			return
 		}
 
@@ -119,7 +119,7 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 
 			resp, err := httpClient.Do(req)
 			if err != nil {
-				results <- &core.Result{Type: "riddler", Failure: err}
+				results <- core.NewResult("riddler", nil, err)
 				return
 			}
 

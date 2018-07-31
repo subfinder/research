@@ -31,7 +31,7 @@ func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- &core.Result{Type: "hackertarget", Failure: err}
+			results <- core.NewResult("hackertarget", nil, err)
 			return
 		}
 
@@ -47,7 +47,7 @@ func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 			resp, err = httpClient.Get("https://api.hackertarget.com/hostsearch/?q=" + domain)
 		}
 		if err != nil {
-			results <- &core.Result{Type: "hacker target", Failure: err}
+			results <- core.NewResult("hackertarget", nil, err)
 			return
 		}
 		defer resp.Body.Close()

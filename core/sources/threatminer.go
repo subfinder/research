@@ -27,7 +27,7 @@ func (source *Threatminer) ProcessDomain(domain string) <-chan *core.Result {
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- &core.Result{Type: "threatminer", Failure: err}
+			results <- core.NewResult("threatminer", nil, err)
 			return
 		}
 
@@ -35,7 +35,7 @@ func (source *Threatminer) ProcessDomain(domain string) <-chan *core.Result {
 
 		resp, err := httpClient.Get("https://www.threatminer.org/getData.php?e=subdomains_container&q=" + domain + "&t=0&rt=10&p=1")
 		if err != nil {
-			results <- &core.Result{Type: "threatminer", Failure: err}
+			results <- core.NewResult("threatminer", nil, err)
 			return
 		}
 		defer resp.Body.Close()
@@ -49,7 +49,7 @@ func (source *Threatminer) ProcessDomain(domain string) <-chan *core.Result {
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
-					results <- &core.Result{Type: "threatminer", Success: str}
+					results <- core.NewResult("threatminer", str, nil)
 				}
 			}
 		}

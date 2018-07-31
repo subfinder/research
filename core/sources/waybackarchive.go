@@ -28,7 +28,7 @@ func (source *WaybackArchive) ProcessDomain(domain string) <-chan *core.Result {
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- &core.Result{Type: "waybackarchive", Failure: err}
+			results <- core.NewResult("waybackarchive", nil, err)
 			return
 		}
 
@@ -36,7 +36,7 @@ func (source *WaybackArchive) ProcessDomain(domain string) <-chan *core.Result {
 
 		resp, err := httpClient.Get("http://web.archive.org/cdx/search/cdx?url=*." + domain + "/*&output=json&fl=original&collapse=urlkey")
 		if err != nil {
-			results <- &core.Result{Type: "waybackarchive", Failure: err}
+			results <- core.NewResult("waybackarchive", nil, err)
 			return
 		}
 		defer resp.Body.Close()
@@ -55,7 +55,7 @@ func (source *WaybackArchive) ProcessDomain(domain string) <-chan *core.Result {
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
-					results <- &core.Result{Type: "waybackarchive", Success: str}
+					results <- core.NewResult("waybackarchive", str, nil)
 				}
 			} else {
 				jsonBuffer.Write(scanner.Bytes())

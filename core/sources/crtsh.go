@@ -36,7 +36,7 @@ func (source *CrtSh) ProcessDomain(domain string) <-chan *core.Result {
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- &core.Result{Type: "crtsh", Failure: err}
+			results <- core.NewResult("crtsh", nil, err)
 			return
 		}
 
@@ -44,7 +44,7 @@ func (source *CrtSh) ProcessDomain(domain string) <-chan *core.Result {
 
 		resp, err := httpClient.Get("https://crt.sh/?q=%25." + domain + "&output=json")
 		if err != nil {
-			results <- &core.Result{Type: "crtsh", Failure: err}
+			results <- core.NewResult("crtsh", nil, err)
 			return
 		}
 		defer resp.Body.Close()
@@ -62,7 +62,7 @@ func (source *CrtSh) ProcessDomain(domain string) <-chan *core.Result {
 				err = json.Unmarshal(jsonBuffer.Bytes(), &object)
 				jsonBuffer.Reset()
 				if err != nil {
-					results <- &core.Result{Type: "crtsh", Failure: err}
+					results <- core.NewResult("crtsh", nil, err)
 					continue
 				}
 				// This could potentially be made more efficient.
@@ -70,7 +70,7 @@ func (source *CrtSh) ProcessDomain(domain string) <-chan *core.Result {
 					_, found := uniqFilter[str]
 					if !found {
 						uniqFilter[str] = true
-						results <- &core.Result{Type: "certspotter", Success: str}
+						results <- core.NewResult("crtsh", str, nil)
 					}
 				}
 			}

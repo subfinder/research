@@ -30,7 +30,7 @@ func (source *DnsDbDotCom) ProcessDomain(domain string) <-chan *core.Result {
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- &core.Result{Type: "dnsdbdotcom", Failure: err}
+			results <- core.NewResult("dnsdbdotcom", nil, err)
 			return
 		}
 
@@ -38,7 +38,7 @@ func (source *DnsDbDotCom) ProcessDomain(domain string) <-chan *core.Result {
 
 		resp, err := httpClient.Get("http://www.dnsdb.org/f/" + domain + ".dnsdb.org/")
 		if err != nil {
-			results <- &core.Result{Type: "dnsdbdotcom", Failure: err}
+			results <- core.NewResult("dnsdbdotcom", nil, err)
 			return
 		}
 		defer resp.Body.Close()
@@ -50,7 +50,7 @@ func (source *DnsDbDotCom) ProcessDomain(domain string) <-chan *core.Result {
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
-					results <- &core.Result{Type: "dnsdbdotcom", Success: str}
+					results <- core.NewResult("dnsdbdotcom", str, nil)
 				}
 			}
 		}

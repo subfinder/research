@@ -30,7 +30,7 @@ func (source *ArchiveIs) ProcessDomain(domain string) <-chan *core.Result {
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- &core.Result{Type: "archiveis", Failure: err}
+			results <- core.NewResult("archiveis", nil, err)
 			return
 		}
 
@@ -38,7 +38,7 @@ func (source *ArchiveIs) ProcessDomain(domain string) <-chan *core.Result {
 
 		resp, err := httpClient.Get("http://archive.is/*." + domain)
 		if err != nil {
-			results <- &core.Result{Type: "archiveis", Failure: err}
+			results <- core.NewResult("archiveis", nil, err)
 			return
 		}
 		defer resp.Body.Close()
@@ -50,7 +50,7 @@ func (source *ArchiveIs) ProcessDomain(domain string) <-chan *core.Result {
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
-					results <- &core.Result{Type: "archiveis", Success: str}
+					results <- core.NewResult("archiveis", str, nil)
 				}
 			}
 		}

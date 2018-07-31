@@ -27,7 +27,7 @@ func (source *FindSubdomainsDotCom) ProcessDomain(domain string) <-chan *core.Re
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- &core.Result{Type: "findsubdomainsdotcom", Failure: err}
+			results <- core.NewResult("findsubdomainsdotcom", nil, err)
 			return
 		}
 
@@ -35,7 +35,7 @@ func (source *FindSubdomainsDotCom) ProcessDomain(domain string) <-chan *core.Re
 
 		resp, err := httpClient.Get("https://findsubdomains.com/subdomains-of/" + domain)
 		if err != nil {
-			results <- &core.Result{Type: "findsubdomainsdotcom", Failure: err}
+			results <- core.NewResult("findsubdomainsdotcom", nil, err)
 			return
 		}
 		defer resp.Body.Close()
@@ -47,7 +47,7 @@ func (source *FindSubdomainsDotCom) ProcessDomain(domain string) <-chan *core.Re
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
-					results <- &core.Result{Type: "findsubdomainsdotcom", Success: str}
+					results <- core.NewResult("findsubdomainsdotcom", str, nil)
 				}
 			}
 		}

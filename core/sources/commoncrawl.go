@@ -27,14 +27,14 @@ func (source *CommonCrawlDotOrg) ProcessDomain(domain string) <-chan *core.Resul
 
 		resp, err := httpClient.Get("http://index.commoncrawl.org/CC-MAIN-2018-17-index?url=*." + domain + "&output=json")
 		if err != nil {
-			results <- &core.Result{Type: "commoncrawldotorg", Failure: err}
+			results <- core.NewResult("commoncrawldotorg", nil, err)
 			return
 		}
 		defer resp.Body.Close()
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- &core.Result{Type: "commoncrawldotorg", Failure: err}
+			results <- core.NewResult("commoncrawldotorg", nil, err)
 			return
 		}
 
@@ -47,7 +47,7 @@ func (source *CommonCrawlDotOrg) ProcessDomain(domain string) <-chan *core.Resul
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
-					results <- &core.Result{Type: "commoncrawldotorg", Success: str}
+					results <- core.NewResult("commoncrawldotorg", str, nil)
 				}
 			}
 		}
