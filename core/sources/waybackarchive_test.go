@@ -68,7 +68,7 @@ func ExampleWaybackArchive() {
 	// Output: true
 }
 
-func ExampleWaybackArchiveMultiThreaded() {
+func ExampleWaybackArchive_multiThreaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := WaybackArchive{}
 	results := []*core.Result{}

@@ -59,7 +59,7 @@ func ExampleFindSubdomainsDotCom() {
 	// Output: true
 }
 
-func ExampleFindSubdomainsDotComMultiThreaded() {
+func ExampleFindSubdomainsDotCom_multiThreaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 	source := FindSubdomainsDotCom{}
 	results := []*core.Result{}

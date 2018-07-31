@@ -59,13 +59,13 @@ func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 			str := strings.Split(scanner.Text(), ",")[0]
 			if strings.Contains(str, "API count exceeded") {
 				results <- &core.Result{Type: "hackertarget", Failure: errors.New(str)}
-			} else {
-				for _, str := range domainExtractor.FindAllString(str, -1) {
-					_, found := uniqFilter[str]
-					if !found {
-						uniqFilter[str] = true
-						results <- &core.Result{Type: "hackertarget", Success: str}
-					}
+				return
+			}
+			for _, str := range domainExtractor.FindAllString(str, -1) {
+				_, found := uniqFilter[str]
+				if !found {
+					uniqFilter[str] = true
+					results <- core.NewResult("hackertarget", str, nil)
 				}
 			}
 		}

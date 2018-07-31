@@ -11,7 +11,7 @@ func TestCertSpotter(t *testing.T) {
 	results := []*core.Result{}
 
 	for result := range source.ProcessDomain(domain) {
-		t.Log(result.Success)
+		t.Log(result)
 		if result.IsFailure() {
 			t.Fatal(result.Failure)
 		}
@@ -36,6 +36,7 @@ func TestCertSpotter_MultiThreaded(t *testing.T) {
 		go func(domain string) {
 			defer wg.Done()
 			for result := range source.ProcessDomain(domain) {
+				t.Log(result)
 				mx.Lock()
 				results = append(results, result)
 				mx.Unlock()
@@ -46,7 +47,7 @@ func TestCertSpotter_MultiThreaded(t *testing.T) {
 	wg.Wait() // collect results
 
 	if len(results) < 6000 {
-		t.Errorf("expected more than 23000 results, got '%v'", len(results))
+		t.Errorf("expected more than 6000 results, got '%v'", len(results))
 	}
 }
 

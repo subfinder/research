@@ -11,6 +11,7 @@ func TestThreatminer(t *testing.T) {
 	results := []*core.Result{}
 
 	for result := range source.ProcessDomain(domain) {
+		t.Log(result)
 		results = append(results, result)
 	}
 
@@ -32,6 +33,7 @@ func TestThreatminer_multi_threaded(t *testing.T) {
 		go func(domain string) {
 			defer wg.Done()
 			for result := range source.ProcessDomain(domain) {
+				t.Log(result)
 				mx.Lock()
 				results = append(results, result)
 				mx.Unlock()
@@ -42,7 +44,7 @@ func TestThreatminer_multi_threaded(t *testing.T) {
 	wg.Wait() // collect results
 
 	if len(results) < 3500 {
-		t.Errorf("expected more than 1180 results, got '%v'", len(results))
+		t.Errorf("expected more than 3500 results, got '%v'", len(results))
 	}
 }
 
