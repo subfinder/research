@@ -19,12 +19,12 @@ func (source *PTRArchiveDotCom) ProcessDomain(domain string) <-chan *core.Result
 		defer close(results)
 
 		httpClient := &http.Client{
-			Timeout: time.Second * 60,
+			//Timeout: time.Second * 60,
 			Transport: &http.Transport{
 				Dial: (&net.Dialer{
-					Timeout: 5 * time.Second,
+					Timeout: 10 * time.Second,
 				}).Dial,
-				TLSHandshakeTimeout: 5 * time.Second,
+				TLSHandshakeTimeout: 10 * time.Second,
 			},
 		}
 
