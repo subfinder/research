@@ -11,6 +11,7 @@ func TestArchiveIs(t *testing.T) {
 	results := []*core.Result{}
 
 	for result := range source.ProcessDomain(domain) {
+		t.Log(result)
 		results = append(results, result)
 	}
 
@@ -33,6 +34,10 @@ func TestArchiveIsMultiThreaded(t *testing.T) {
 		go func(domain string) {
 			defer wg.Done()
 			for result := range source.ProcessDomain(domain) {
+				t.Log(result)
+				if result.IsSuccess() && result.IsFailure() {
+					t.Error("got a result that was a success and failure")
+				}
 				mx.Lock()
 				results = append(results, result)
 				mx.Unlock()
@@ -42,8 +47,8 @@ func TestArchiveIsMultiThreaded(t *testing.T) {
 
 	wg.Wait() // collect results
 
-	if len(results) <= 40 {
-		t.Errorf("expected at least 40 results, got '%v'", len(results))
+	if len(results) <= 4 {
+		t.Errorf("expected at least 4 results, got '%v'", len(results))
 	}
 }
 
@@ -82,7 +87,7 @@ func ExampleArchiveIs_multi_threaded() {
 
 	wg.Wait() // collect results
 
-	fmt.Println(len(results) >= 40)
+	fmt.Println(len(results) >= 4)
 	// Output: true
 }
 
