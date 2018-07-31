@@ -79,6 +79,16 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
+		// check if only email was given
+		if source.Email != "" && source.Password == "" {
+			results <- core.NewResult("riddler", nil, errors.New("given email, but no password"))
+		}
+
+		// check if only password was given
+		if source.Email == "" && source.Password != "" {
+			results <- core.NewResult("riddler", nil, errors.New("given password, but no email"))
+		}
+
 		// check if source needs to be authenticated
 		if source.APIToken == "" && source.Email != "" && source.Password != "" {
 			_, err := source.Authenticate()
@@ -129,7 +139,7 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 
 			err = json.NewDecoder(resp.Body).Decode(&hostResponse)
 			if err != nil {
-				results <- &core.Result{Type: "riddler", Failure: err}
+				results <- core.NewResult("riddler", nil, err)
 				return
 			}
 
@@ -138,7 +148,7 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 					_, found := uniqFilter[str]
 					if !found {
 						uniqFilter[str] = true
-						results <- &core.Result{Type: "certspotter", Success: str}
+						results <- core.NewResult("riddler", str, nil)
 					}
 				}
 			}
@@ -149,7 +159,7 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 			// not authenticated
 			resp, err = httpClient.Get("https://riddler.io/search/exportcsv?q=pld:" + domain)
 			if err != nil {
-				results <- &core.Result{Type: "riddler", Failure: err}
+				results <- core.NewResult("riddler", nil, err)
 				return
 			}
 			defer resp.Body.Close()
@@ -161,7 +171,7 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 					_, found := uniqFilter[str]
 					if !found {
 						uniqFilter[str] = true
-						results <- &core.Result{Type: "certspotter", Success: str}
+						results <- core.NewResult("riddler", str, nil)
 					}
 				}
 			}
