@@ -7,8 +7,10 @@ import "time"
 import "bufio"
 import "bytes"
 
+// WaybackArchive is a source to process subdomains from http://web.archive.org
 type WaybackArchive struct{}
 
+// ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *WaybackArchive) ProcessDomain(domain string) <-chan *core.Result {
 	results := make(chan *core.Result)
 	go func(domain string, results chan *core.Result) {

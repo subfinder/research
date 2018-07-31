@@ -10,6 +10,7 @@ import "net"
 import "time"
 import "errors"
 
+// Riddler is a source to process subdomains from https://riddler.io
 type Riddler struct {
 	Email    string
 	Password string
@@ -28,7 +29,7 @@ type riddlerAuthenticationResponse struct {
 	} `json:"response"`
 }
 
-// Note: probably not totally thread safe? #yolo
+// Authenticate uses a given username and password to retrieve the APIToken.
 func (source *Riddler) Authenticate() (bool, error) {
 	httpClient := &http.Client{
 		Timeout: time.Second * 60,
@@ -72,6 +73,7 @@ func (source *Riddler) Authenticate() (bool, error) {
 	return true, nil
 }
 
+// ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 	results := make(chan *core.Result)
 	go func(domain string, results chan *core.Result) {

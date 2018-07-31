@@ -8,10 +8,12 @@ import "bufio"
 import "strings"
 import "errors"
 
+// HackerTarget is a source to process subdomains from https://hackertarget.com
 type HackerTarget struct {
 	APIKey string
 }
 
+// ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 	results := make(chan *core.Result)
 	go func(domain string, results chan *core.Result) {
