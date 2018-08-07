@@ -58,3 +58,16 @@ func TestBing_multi_threaded(t *testing.T) {
 	}
 }
 
+func ExampleBing() {
+	domain := "google.com"
+	source := Bing{}
+	results := []*core.Result{}
+
+	for result := range source.ProcessDomain(domain) {
+		results = append(results, result)
+	}
+
+	fmt.Println(len(results) >= 20)
+	// Output: true
+}
+
