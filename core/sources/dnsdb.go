@@ -6,11 +6,11 @@ import (
 	"github.com/subfinder/research/core"
 )
 
-// DnsDbDotCom is a source to process subdomains from http://www.dnsdb.org/f/
-type DnsDbDotCom struct{}
+// DNSDbDotCom is a source to process subdomains from http://www.dnsdb.org/f/
+type DNSDbDotCom struct{}
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
-func (source *DnsDbDotCom) ProcessDomain(domain string) <-chan *core.Result {
+func (source *DNSDbDotCom) ProcessDomain(domain string) <-chan *core.Result {
 	results := make(chan *core.Result)
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
