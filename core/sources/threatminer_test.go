@@ -1,9 +1,12 @@
 package sources
 
-import core "github.com/subfinder/research/core"
-import "testing"
-import "sync"
-import "fmt"
+import (
+	"fmt"
+	"sync"
+	"testing"
+
+	"github.com/subfinder/research/core"
+)
 
 func TestThreatminer(t *testing.T) {
 	domain := "bing.com"

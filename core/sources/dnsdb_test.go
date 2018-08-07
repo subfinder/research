@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	core "github.com/subfinder/research/core"
+	"github.com/subfinder/research/core"
 )
 
 func TestDnsDbDotCom(t *testing.T) {
