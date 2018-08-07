@@ -7,3 +7,6 @@ import (
 	"github.com/subfinder/research/core"
 )
 
+// Bing is a source to process subdomains from https://bing.com
+type Bing struct{}
+
