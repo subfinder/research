@@ -4,11 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"net"
-	"net/http"
-	"time"
 
-	core "github.com/subfinder/research/core"
+	"github.com/subfinder/research/core"
 )
 
 // CrtSh is a source to process subdomains from https://crt.sh

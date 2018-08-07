@@ -1,14 +1,15 @@
 package sources
 
-import core "github.com/subfinder/research/core"
-import "net/http"
-import "strings"
-import "encoding/json"
-import "bytes"
-import "bufio"
-import "net"
-import "time"
-import "errors"
+import (
+	"bufio"
+	"bytes"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"strings"
+
+	"github.com/subfinder/research/core"
+)
 
 // Riddler is a source to process subdomains from https://riddler.io
 type Riddler struct {

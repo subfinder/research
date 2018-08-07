@@ -1,12 +1,13 @@
 package sources
 
-import core "github.com/subfinder/research/core"
-import "net/http"
-import "net"
-import "time"
-import "bufio"
-import "strings"
-import "errors"
+import (
+	"bufio"
+	"errors"
+	"net/http"
+	"strings"
+
+	"github.com/subfinder/research/core"
+)
 
 // HackerTarget is a source to process subdomains from https://hackertarget.com
 type HackerTarget struct {

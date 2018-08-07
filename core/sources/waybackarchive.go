@@ -1,11 +1,11 @@
 package sources
 
-import core "github.com/subfinder/research/core"
-import "net/http"
-import "net"
-import "time"
-import "bufio"
-import "bytes"
+import (
+	"bufio"
+	"bytes"
+
+	"github.com/subfinder/research/core"
+)
 
 // WaybackArchive is a source to process subdomains from http://web.archive.org
 type WaybackArchive struct{}

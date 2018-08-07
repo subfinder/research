@@ -2,11 +2,8 @@ package sources
 
 import (
 	"bufio"
-	"net"
-	"net/http"
-	"time"
 
-	core "github.com/subfinder/research/core"
+	"github.com/subfinder/research/core"
 )
 
 // ArchiveIs is a source to process subdomains from http://archive.is

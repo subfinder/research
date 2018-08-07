@@ -1,10 +1,10 @@
 package sources
 
-import core "github.com/subfinder/research/core"
-import "net/http"
-import "net"
-import "time"
-import "bufio"
+import (
+	"bufio"
+
+	"github.com/subfinder/research/core"
+)
 
 // FindSubdomainsDotCom is a source to process subdomains from https://findsubdomains.com
 type FindSubdomainsDotCom struct{}
