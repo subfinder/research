@@ -15,16 +15,6 @@ func (source *PTRArchiveDotCom) ProcessDomain(domain string) <-chan *core.Result
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
-		httpClient := &http.Client{
-			//Timeout: time.Second * 60,
-			Transport: &http.Transport{
-				Dial: (&net.Dialer{
-					Timeout: 10 * time.Second,
-				}).Dial,
-				TLSHandshakeTimeout: 10 * time.Second,
-			},
-		}
-
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			results <- core.NewResult("ptrarchivedotcom", nil, err)
@@ -33,7 +23,7 @@ func (source *PTRArchiveDotCom) ProcessDomain(domain string) <-chan *core.Result
 
 		uniqFilter := map[string]bool{}
 
-		resp, err := httpClient.Get("http://ptrarchive.com/tools/search3.htm?label=" + domain + "&date=ALL")
+		resp, err := core.HTTPClient.Get("http://ptrarchive.com/tools/search3.htm?label=" + domain + "&date=ALL")
 		if err != nil {
 			results <- core.NewResult("ptrarchivedotcom", nil, err)
 			return

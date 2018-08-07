@@ -32,16 +32,6 @@ type riddlerAuthenticationResponse struct {
 
 // Authenticate uses a given username and password to retrieve the APIToken.
 func (source *Riddler) Authenticate() (bool, error) {
-	httpClient := &http.Client{
-		Timeout: time.Second * 60,
-		Transport: &http.Transport{
-			Dial: (&net.Dialer{
-				Timeout: 5 * time.Second,
-			}).Dial,
-			TLSHandshakeTimeout: 5 * time.Second,
-		},
-	}
-
 	var data = []byte(`{"email":"` + source.Email + `", "password":"` + source.Password + `"}`)
 
 	// Create a post request to get subdomain data
@@ -52,7 +42,7 @@ func (source *Riddler) Authenticate() (bool, error) {
 
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := httpClient.Do(req)
+	resp, err := core.HTTPClient.Do(req)
 	if err != nil {
 		return false, err
 	}
@@ -99,16 +89,6 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 			}
 		}
 
-		httpClient := &http.Client{
-			//Timeout: time.Second * 60,
-			Transport: &http.Transport{
-				Dial: (&net.Dialer{
-					Timeout: 10 * time.Second,
-				}).Dial,
-				TLSHandshakeTimeout: 10 * time.Second,
-			},
-		}
-
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			results <- core.NewResult("riddler", nil, err)
@@ -128,7 +108,7 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 			req.Header.Set("Content-type", "application/json")
 			req.Header.Set("Authentication-Token", source.APIToken)
 
-			resp, err := httpClient.Do(req)
+			resp, err := core.HTTPClient.Do(req)
 			if err != nil {
 				results <- core.NewResult("riddler", nil, err)
 				return
@@ -158,7 +138,7 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 
 		if source.APIToken == "" {
 			// not authenticated
-			resp, err = httpClient.Get("https://riddler.io/search/exportcsv?q=pld:" + domain)
+			resp, err = core.HTTPClient.Get("https://riddler.io/search/exportcsv?q=pld:" + domain)
 			if err != nil {
 				results <- core.NewResult("riddler", nil, err)
 				return

@@ -15,16 +15,6 @@ func (source *FindSubdomainsDotCom) ProcessDomain(domain string) <-chan *core.Re
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
-		httpClient := &http.Client{
-			//Timeout: time.Second * 60,
-			Transport: &http.Transport{
-				Dial: (&net.Dialer{
-					Timeout: 10 * time.Second,
-				}).Dial,
-				TLSHandshakeTimeout: 10 * time.Second,
-			},
-		}
-
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			results <- core.NewResult("findsubdomainsdotcom", nil, err)
@@ -33,7 +23,7 @@ func (source *FindSubdomainsDotCom) ProcessDomain(domain string) <-chan *core.Re
 
 		uniqFilter := map[string]bool{}
 
-		resp, err := httpClient.Get("https://findsubdomains.com/subdomains-of/" + domain)
+		resp, err := core.HTTPClient.Get("https://findsubdomains.com/subdomains-of/" + domain)
 		if err != nil {
 			results <- core.NewResult("findsubdomainsdotcom", nil, err)
 			return

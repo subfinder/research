@@ -15,16 +15,6 @@ func (source *CommonCrawlDotOrg) ProcessDomain(domain string) <-chan *core.Resul
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
-		httpClient := &http.Client{
-			//Timeout: time.Second * 60,
-			Transport: &http.Transport{
-				Dial: (&net.Dialer{
-					Timeout: 10 * time.Second,
-				}).Dial,
-				TLSHandshakeTimeout: 10 * time.Second,
-			},
-		}
-
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			results <- core.NewResult("commoncrawldotorg", nil, err)
@@ -33,7 +23,7 @@ func (source *CommonCrawlDotOrg) ProcessDomain(domain string) <-chan *core.Resul
 
 		uniqFilter := map[string]bool{}
 
-		resp, err := httpClient.Get("http://index.commoncrawl.org/CC-MAIN-2018-17-index?url=*." + domain + "&output=json")
+		resp, err := core.HTTPClient.Get("https://index.commoncrawl.org/CC-MAIN-2018-17-index?url=*." + domain + "&output=json")
 		if err != nil {
 			results <- core.NewResult("commoncrawldotorg", nil, err)
 			return

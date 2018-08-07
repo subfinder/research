@@ -16,16 +16,6 @@ func (source *WaybackArchive) ProcessDomain(domain string) <-chan *core.Result {
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
-		httpClient := &http.Client{
-			//Timeout: time.Second * 60,
-			Transport: &http.Transport{
-				Dial: (&net.Dialer{
-					Timeout: 10 * time.Second,
-				}).Dial,
-				TLSHandshakeTimeout: 10 * time.Second,
-			},
-		}
-
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			results <- core.NewResult("waybackarchive", nil, err)
@@ -34,7 +24,7 @@ func (source *WaybackArchive) ProcessDomain(domain string) <-chan *core.Result {
 
 		uniqFilter := map[string]bool{}
 
-		resp, err := httpClient.Get("http://web.archive.org/cdx/search/cdx?url=*." + domain + "/*&output=json&fl=original&collapse=urlkey")
+		resp, err := core.HTTPClient.Get("http://web.archive.org/cdx/search/cdx?url=*." + domain + "/*&output=json&fl=original&collapse=urlkey")
 		if err != nil {
 			results <- core.NewResult("waybackarchive", nil, err)
 			return

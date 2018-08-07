@@ -20,16 +20,6 @@ func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
-		httpClient := &http.Client{
-			//Timeout: time.Second * 60,
-			Transport: &http.Transport{
-				Dial: (&net.Dialer{
-					Timeout: 10 * time.Second,
-				}).Dial,
-				TLSHandshakeTimeout: 10 * time.Second,
-			},
-		}
-
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			results <- core.NewResult("hackertarget", nil, err)
@@ -43,9 +33,9 @@ func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 
 		// check API key
 		if source.APIKey != "" {
-			resp, err = httpClient.Get("https://api.hackertarget.com/hostsearch/?q=" + domain + "&apikey=" + source.APIKey)
+			resp, err = core.HTTPClient.Get("https://api.hackertarget.com/hostsearch/?q=" + domain + "&apikey=" + source.APIKey)
 		} else {
-			resp, err = httpClient.Get("https://api.hackertarget.com/hostsearch/?q=" + domain)
+			resp, err = core.HTTPClient.Get("https://api.hackertarget.com/hostsearch/?q=" + domain)
 		}
 		if err != nil {
 			results <- core.NewResult("hackertarget", nil, err)
@@ -59,7 +49,7 @@ func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 		for scanner.Scan() {
 			str := strings.Split(scanner.Text(), ",")[0]
 			if strings.Contains(str, "API count exceeded") {
-				results <- &core.Result{Type: "hackertarget", Failure: errors.New(str)}
+				results <- core.NewResult("hackertarget", nil, errors.New(str))
 				return
 			}
 			for _, str := range domainExtractor.FindAllString(str, -1) {

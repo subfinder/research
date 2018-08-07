@@ -15,16 +15,6 @@ func (source *CertSpotter) ProcessDomain(domain string) <-chan *core.Result {
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
-		httpClient := &http.Client{
-			//Timeout: time.Second * 60,
-			Transport: &http.Transport{
-				Dial: (&net.Dialer{
-					Timeout: 10 * time.Second,
-				}).Dial,
-				TLSHandshakeTimeout: 10 * time.Second,
-			},
-		}
-
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			results <- core.NewResult("certspotter", nil, err)
@@ -33,8 +23,7 @@ func (source *CertSpotter) ProcessDomain(domain string) <-chan *core.Result {
 
 		uniqFilter := map[string]bool{}
 
-		// get response from the API, optionally with an API key
-		resp, err := httpClient.Get("https://certspotter.com/api/v0/certs?domain=" + domain)
+		resp, err := core.HTTPClient.Get("https://certspotter.com/api/v0/certs?domain=" + domain)
 		if err != nil {
 			results <- core.NewResult("certspotter", nil, err)
 			return
