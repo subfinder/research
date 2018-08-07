@@ -8,9 +8,9 @@ import (
 	"github.com/subfinder/research/core"
 )
 
-func TestDnsDbDotCom(t *testing.T) {
+func TestDNSDbDotCom(t *testing.T) {
 	domain := "bing.com"
-	source := &DnsDbDotCom{}
+	source := &DNSDbDotCom{}
 	results := []*core.Result{}
 
 	for result := range source.ProcessDomain(domain) {
@@ -23,9 +23,9 @@ func TestDnsDbDotCom(t *testing.T) {
 	}
 }
 
-func TestDnsDbDotComMultiThreaded(t *testing.T) {
+func TestDNSDbDotComMultiThreaded(t *testing.T) {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
-	source := &DnsDbDotCom{}
+	source := &DNSDbDotCom{}
 	results := []*core.Result{}
 
 	wg := sync.WaitGroup{}
@@ -51,9 +51,9 @@ func TestDnsDbDotComMultiThreaded(t *testing.T) {
 	}
 }
 
-func ExampleDnsDbDotCom() {
+func ExampleDNSDbDotCom() {
 	domain := "bing.com"
-	source := &DnsDbDotCom{}
+	source := &DNSDbDotCom{}
 	results := []*core.Result{}
 
 	for result := range source.ProcessDomain(domain) {
@@ -64,9 +64,9 @@ func ExampleDnsDbDotCom() {
 	// Output: true
 }
 
-func ExampleDnsDbDotCom_multi_threaded() {
+func ExampleDNSDbDotCom_multi_threaded() {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
-	source := &DnsDbDotCom{}
+	source := &DNSDbDotCom{}
 	results := []*core.Result{}
 
 	wg := sync.WaitGroup{}
@@ -90,9 +90,9 @@ func ExampleDnsDbDotCom_multi_threaded() {
 	// Output: true
 }
 
-func BenchmarkDnsDbDotComSingleThreaded(b *testing.B) {
+func BenchmarkDNSDbDotComSingleThreaded(b *testing.B) {
 	domain := "bing.com"
-	source := &DnsDbDotCom{}
+	source := &DNSDbDotCom{}
 
 	for n := 0; n < b.N; n++ {
 		results := []*core.Result{}
@@ -102,9 +102,9 @@ func BenchmarkDnsDbDotComSingleThreaded(b *testing.B) {
 	}
 }
 
-func BenchmarkDnsDbDotComMultiThreaded(b *testing.B) {
+func BenchmarkDNSDbDotComMultiThreaded(b *testing.B) {
 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
-	source := &DnsDbDotCom{}
+	source := &DNSDbDotCom{}
 	wg := sync.WaitGroup{}
 	mx := sync.Mutex{}
 
