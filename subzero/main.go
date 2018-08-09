@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/spf13/cobra"
-	core "github.com/subfinder/research/core"
-	sources "github.com/subfinder/research/core/sources"
+	"github.com/subfinder/research/core"
+	"github.com/subfinder/research/core/sources"
 )
 
 var sourcesList = []core.Source{
