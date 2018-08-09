@@ -55,6 +55,7 @@ func main() {
 		PreRun: func(cmd *cobra.Command, args []string) {
 			if cmdEnumerateInsecureOpt {
 				sourcesList = append(sourcesList, &sources.PTRArchiveDotCom{})
+				sourcesList = append(sourcesList, &sources.DogPile{})
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
