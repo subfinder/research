@@ -97,3 +97,15 @@ func ExampleYahoo_multi_threaded() {
 	// Output: true
 }
 
+func BenchmarkYahoo_single_threaded(b *testing.B) {
+	domain := "google.com"
+	source := Yahoo{}
+
+	for n := 0; n < b.N; n++ {
+		results := []*core.Result{}
+		for result := range source.ProcessDomain(domain) {
+			results = append(results, result)
+		}
+	}
+}
+
