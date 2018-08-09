@@ -72,3 +72,29 @@ func ExampleAsk() {
 	// Output: true
 }
 
+func ExampleAsk_multi_threaded() {
+	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
+	source := Ask{}
+	results := []*core.Result{}
+
+	wg := sync.WaitGroup{}
+	mx := sync.Mutex{}
+
+	for _, domain := range domains {
+		wg.Add(1)
+		go func(domain string) {
+			defer wg.Done()
+			for result := range source.ProcessDomain(domain) {
+				mx.Lock()
+				results = append(results, result)
+				mx.Unlock()
+			}
+		}(domain)
+	}
+
+	wg.Wait() // collect results
+
+	fmt.Println(len(results) >= 4)
+	// Output: true
+}
+
