@@ -10,8 +10,11 @@ import (
 var HTTPClient = &http.Client{
 	Transport: &http.Transport{
 		Dial: (&net.Dialer{
-			Timeout: 10 * time.Second,
+			Timeout: 30 * time.Second,
 		}).Dial,
-		TLSHandshakeTimeout: 10 * time.Second,
+		TLSHandshakeTimeout:   30 * time.Second,
+		IdleConnTimeout:       30 * time.Second,
+		ResponseHeaderTimeout: 30 * time.Second,
+		ExpectContinueTimeout: 30 * time.Second,
 	},
 }
