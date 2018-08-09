@@ -97,3 +97,15 @@ func ExampleDogPile_multi_threaded() {
 	// Output: true
 }
 
+func BenchmarkDogPile_single_threaded(b *testing.B) {
+	domain := "google.com"
+	source := DogPile{}
+
+	for n := 0; n < b.N; n++ {
+		results := []*core.Result{}
+		for result := range source.ProcessDomain(domain) {
+			results = append(results, result)
+		}
+	}
+}
+
