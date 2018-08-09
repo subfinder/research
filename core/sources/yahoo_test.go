@@ -58,3 +58,16 @@ func TestYahoo_multi_threaded(t *testing.T) {
 	}
 }
 
+func ExampleYahoo() {
+	domain := "google.com"
+	source := Yahoo{}
+	results := []*core.Result{}
+
+	for result := range source.ProcessDomain(domain) {
+		results = append(results, result)
+	}
+
+	fmt.Println(len(results) >= 20)
+	// Output: true
+}
+
