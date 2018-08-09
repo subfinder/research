@@ -33,6 +33,7 @@ func (source *Ask) ProcessDomain(domain string) <-chan *core.Result {
 			}
 
 			if resp.StatusCode != 200 {
+				resp.Body.Close()
 				results <- core.NewResult("ask", nil, errors.New(resp.Status))
 				return
 			}
