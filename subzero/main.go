@@ -19,7 +19,7 @@ var sourcesList = []core.Source{
 	&sources.Riddler{},
 	&sources.Threatminer{},
 	&sources.WaybackArchive{},
-	&sources.DnsDbDotCom{},
+	&sources.DNSDbDotCom{},
 }
 
 func enumerate(domain string) chan *core.Result {
