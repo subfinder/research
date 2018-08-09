@@ -2,6 +2,7 @@ package sources
 
 import (
 	"bufio"
+	"errors"
 
 	"github.com/subfinder/research/core"
 )
@@ -29,6 +30,11 @@ func (source *CommonCrawlDotOrg) ProcessDomain(domain string) <-chan *core.Resul
 			return
 		}
 		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			results <- core.NewResult("commoncrawldotorg", nil, errors.New(resp.Status))
+			return
+		}
 
 		scanner := bufio.NewScanner(resp.Body)
 

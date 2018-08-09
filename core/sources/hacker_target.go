@@ -43,6 +43,11 @@ func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 		}
 		defer resp.Body.Close()
 
+		if resp.StatusCode != 200 {
+			results <- core.NewResult("hackertarget", nil, errors.New(resp.Status))
+			return
+		}
+
 		// TODO: investigate io.LimitedReader
 		// read response body, extracting subdomains
 		scanner := bufio.NewScanner(resp.Body)

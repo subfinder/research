@@ -2,6 +2,7 @@ package sources
 
 import (
 	"bufio"
+	"errors"
 	"strconv"
 
 	"github.com/subfinder/research/core"
@@ -28,6 +29,12 @@ func (source *Bing) ProcessDomain(domain string) <-chan *core.Result {
 			resp, err := core.HTTPClient.Get("https://www.bing.com/search?q=domain%3A" + domain + "&go=Submit&first=" + strconv.Itoa(currentPage))
 			if err != nil {
 				results <- core.NewResult("bing", nil, err)
+				return
+			}
+
+			if resp.StatusCode != 200 {
+				resp.Body.Close()
+				results <- core.NewResult("bing", nil, errors.New(resp.Status))
 				return
 			}
 

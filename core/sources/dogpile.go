@@ -2,6 +2,7 @@ package sources
 
 import (
 	"bufio"
+	"errors"
 	"strconv"
 
 	"github.com/subfinder/research/core"
@@ -33,6 +34,12 @@ func (source *DogPile) ProcessDomain(domain string) <-chan *core.Result {
 			resp, err := core.HTTPClient.Get("http://www.dogpile.com/search/web?q=" + domain + "&qsi=" + strconv.Itoa(currentPage*15+1))
 			if err != nil {
 				results <- core.NewResult("dogpile", nil, err)
+				return
+			}
+
+			if resp.StatusCode != 200 {
+				resp.Body.Close()
+				results <- core.NewResult("dogpile", nil, errors.New(resp.Status))
 				return
 			}
 

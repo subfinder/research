@@ -2,6 +2,7 @@ package sources
 
 import (
 	"bufio"
+	"errors"
 
 	"github.com/subfinder/research/core"
 )
@@ -29,6 +30,11 @@ func (source *ArchiveIs) ProcessDomain(domain string) <-chan *core.Result {
 			return
 		}
 		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			results <- core.NewResult("archiveis", nil, errors.New(resp.Status))
+			return
+		}
 
 		scanner := bufio.NewScanner(resp.Body)
 

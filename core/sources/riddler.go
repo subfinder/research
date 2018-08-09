@@ -116,6 +116,11 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 
 			defer resp.Body.Close()
 
+			if resp.StatusCode != 200 {
+				results <- core.NewResult("riddler", nil, errors.New(resp.Status))
+				return
+			}
+
 			hostResponse := []*riddlerHost{}
 
 			err = json.NewDecoder(resp.Body).Decode(&hostResponse)
@@ -144,6 +149,11 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 				return
 			}
 			defer resp.Body.Close()
+
+			if resp.StatusCode != 200 {
+				results <- core.NewResult("riddler", nil, errors.New(resp.Status))
+				return
+			}
 
 			scanner := bufio.NewScanner(resp.Body)
 

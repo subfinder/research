@@ -2,6 +2,7 @@ package sources
 
 import (
 	"bufio"
+	"errors"
 	"strconv"
 
 	"github.com/subfinder/research/core"
@@ -28,6 +29,12 @@ func (source *Yahoo) ProcessDomain(domain string) <-chan *core.Result {
 			resp, err := core.HTTPClient.Get("https://search.yahoo.com/search?p=site:" + domain + "&b=" + strconv.Itoa(currentPage*10) + "&pz=10&bct=0&xargs=0")
 			if err != nil {
 				results <- core.NewResult("yahoo", nil, err)
+				return
+			}
+
+			if resp.StatusCode != 200 {
+				resp.Body.Close()
+				results <- core.NewResult("yahoo", nil, errors.New(resp.Status))
 				return
 			}
 
