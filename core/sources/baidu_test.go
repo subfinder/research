@@ -110,3 +110,27 @@ func BenchmarkBaidu_single_threaded(b *testing.B) {
 	}
 }
 
+func BenchmarkBaidu_multi_threaded(b *testing.B) {
+	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
+	source := Baidu{}
+	wg := sync.WaitGroup{}
+	mx := sync.Mutex{}
+
+	for n := 0; n < b.N; n++ {
+		results := []*core.Result{}
+
+		for _, domain := range domains {
+			wg.Add(1)
+			go func(domain string) {
+				defer wg.Done()
+				for result := range source.ProcessDomain(domain) {
+					mx.Lock()
+					results = append(results, result)
+					mx.Unlock()
+				}
+			}(domain)
+		}
+
+		wg.Wait() // collect results
+	}
+}
