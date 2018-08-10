@@ -59,3 +59,16 @@ func TestBaidu_multi_threaded(t *testing.T) {
 	}
 }
 
+func ExampleBaidu() {
+	domain := "google.com"
+	source := Baidu{}
+	results := []*core.Result{}
+
+	for result := range source.ProcessDomain(domain) {
+		results = append(results, result)
+	}
+
+	fmt.Println(len(results) >= 20)
+	// Output: true
+}
+
