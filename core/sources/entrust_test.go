@@ -59,3 +59,16 @@ func TestEntrust_multi_threaded(t *testing.T) {
 	}
 }
 
+func ExampleEntrust() {
+	domain := "google.com"
+	source := Entrust{}
+	results := []*core.Result{}
+
+	for result := range source.ProcessDomain(domain) {
+		results = append(results, result)
+	}
+
+	fmt.Println(len(results) >= 20)
+	// Output: true
+}
+
