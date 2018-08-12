@@ -45,6 +45,7 @@ func enumerate(domain string) chan *core.Result {
 }
 
 func main() {
+	results := make(chan *core.Result)
 	jobs := sync.WaitGroup{}
 	var cmdEnumerateVerboseOpt bool
 	var cmdEnumerateInsecureOpt bool
@@ -64,14 +65,19 @@ func main() {
 				jobs.Add(1)
 				go func(domain string) {
 					defer jobs.Done()
-					for result := range enumerate(domain) {
-						if result.Failure != nil && cmdEnumerateVerboseOpt {
-							fmt.Println(result.Type, result.Failure)
-						} else {
-							fmt.Println(result.Type, result.Success)
-						}
+					for result := range core.EnumerateSubdomains(domain, &core.EnumerationOptions{Sources: sourcesList}) {
+						results <- result
 					}
 				}(domain)
+			}
+		},
+		PostRun: func(cmd *cobra.Command, args []string) {
+			for result := range results {
+				if result.IsSuccess() {
+					fmt.Println(result.Type, result.Success)
+				} else if cmdEnumerateVerboseOpt {
+					fmt.Println(result.Type, result.Failure)
+				}
 			}
 		},
 	}
