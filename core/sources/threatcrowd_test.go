@@ -59,3 +59,16 @@ func TestThreatCrowd_multi_threaded(t *testing.T) {
 	}
 }
 
+func ExampleThreatCrowd() {
+	domain := "google.com"
+	source := ThreatCrowd{}
+	results := []*core.Result{}
+
+	for result := range source.ProcessDomain(domain) {
+		results = append(results, result)
+	}
+
+	fmt.Println(len(results) >= 20)
+	// Output: true
+}
+
