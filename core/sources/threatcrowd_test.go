@@ -14,8 +14,7 @@ func TestThreatCrowd(t *testing.T) {
 	results := []*core.Result{}
 
 	for result := range source.ProcessDomain(domain) {
-		//t.Log(result)
-		fmt.Println(result)
+		t.Log(result)
 		results = append(results, result)
 		// Not waiting around to iterate all the possible pages.
 		if len(results) >= 20 {
