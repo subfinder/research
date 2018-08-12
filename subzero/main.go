@@ -23,6 +23,8 @@ var sourcesList = []core.Source{
 	&sources.Bing{},
 	&sources.Yahoo{},
 	&sources.Baidu{},
+	&sources.Entrust{},
+	&sources.ThreatCrowd{},
 }
 
 func enumerate(domain string) chan *core.Result {
