@@ -14,7 +14,7 @@ var HTTPClient = &http.Client{
 		}).Dial,
 		TLSHandshakeTimeout:   30 * time.Second,
 		IdleConnTimeout:       30 * time.Second,
-		ResponseHeaderTimeout: 30 * time.Second,
+		ResponseHeaderTimeout: 60 * time.Second,
 		ExpectContinueTimeout: 30 * time.Second,
 	},
 }
