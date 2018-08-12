@@ -11,8 +11,10 @@ import (
 	core "github.com/subfinder/research/core"
 )
 
+// Ipv4Info is a source to process subdomains from http://ipv4info.com/
 type Ipv4Info struct{}
 
+// ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *Ipv4Info) ProcessDomain(domain string) <-chan *core.Result {
 	results := make(chan *core.Result)
 	go func(domain string, results chan *core.Result) {
