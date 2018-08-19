@@ -1,6 +1,10 @@
 package core
 
-import "sync"
+import (
+	"context"
+	"sync"
+	"time"
+)
 
 // EnumerateSubdomains takes the given domain and with each Source from EnumerationOptions,
 // it will spawn a go routine to start processing that Domain. The result channels from each
@@ -20,12 +24,25 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 	go func() {
 		defer close(results)
 		wg := sync.WaitGroup{}
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
 		for _, source := range options.Sources {
 			wg.Add(1)
 			go func(source Source) {
 				defer wg.Done()
-				for result := range source.ProcessDomain(domain) {
-					results <- result
+				sourceResults := source.ProcessDomain(domain)
+
+				for {
+					select {
+					case result, ok := <-sourceResults:
+						if ok {
+							results <- result
+						} else {
+							return
+						}
+					case <-ctx.Done():
+						return
+					}
 				}
 			}(source)
 		}

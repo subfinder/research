@@ -10,9 +10,9 @@ func (s *FakeSource1) ProcessDomain(domain string) <-chan *Result {
 	results := make(chan *Result)
 	go func(domain string) {
 		defer close(results)
-		for _, subdomain := range []string{"www.", "info.", "wiggle."} {
-			results <- &Result{Success: subdomain + domain}
-		}
+		results <- &Result{Success: "a." + domain}
+		results <- &Result{Success: "b." + domain}
+		results <- &Result{Success: "c." + domain}
 	}(domain)
 	return results
 }
@@ -32,13 +32,15 @@ func TestEnumerateSubdomains(t *testing.T) {
 	domain := "google.com"
 	options := &EnumerationOptions{Sources: []Source{&FakeSource1{}, &FakeSource2{}}}
 
-	collectedResults := []string{}
+	counter := 0
+
 	for result := range EnumerateSubdomains(domain, options) {
-		collectedResults = append(collectedResults, result.Success.(string))
+		counter++
+		fmt.Println(result)
 	}
 
-	if len(collectedResults) != 6 {
-		t.Error("unable to successfully enumerate through all subdomain sources")
+	if counter != 6 {
+		t.Error(counter)
 	}
 }
 
@@ -55,7 +57,7 @@ func ExampleEnumerateSubdomains() {
 	counter := 0
 
 	for result := range EnumerateSubdomains(domain, options) {
-		if result.IsSuccess() {
+		if result.Failure == nil {
 			counter++
 		}
 	}
