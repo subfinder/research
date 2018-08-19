@@ -30,7 +30,7 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 			wg.Add(1)
 			go func(source Source) {
 				defer wg.Done()
-				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 				defer cancel()
 				sourceResults := source.ProcessDomain(domain)
 				for {
