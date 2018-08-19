@@ -25,7 +25,7 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 	go func() {
 		defer close(results)
 		wg := sync.WaitGroup{}
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		for _, source := range options.Sources {
 			wg.Add(1)
@@ -42,7 +42,7 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 							return
 						}
 					case <-ctx.Done():
-						fmt.Println(" *** context ended it *** ")
+						fmt.Println(" *** context ended it *** ", source)
 						return
 					}
 				}
