@@ -2,7 +2,9 @@ package sources
 
 import (
 	"bufio"
+	"context"
 	"errors"
+	"time"
 
 	"github.com/subfinder/research/core"
 )
@@ -38,12 +40,21 @@ func (source *CertSpotter) ProcessDomain(domain string) <-chan *core.Result {
 
 		scanner := bufio.NewScanner(resp.Body)
 
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
 		for scanner.Scan() {
 			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
-					results <- core.NewResult("certspotter", str, nil)
+					select {
+					case results <- core.NewResult("certspotter", str, nil):
+						// move along
+					case <-ctx.Done():
+						resp.Body.Close()
+						return
+					}
 				}
 			}
 		}

@@ -2,8 +2,10 @@ package sources
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"strconv"
+	"time"
 
 	"github.com/subfinder/research/core"
 )
@@ -42,12 +44,21 @@ func (source *Baidu) ProcessDomain(domain string) <-chan *core.Result {
 
 			scanner.Split(bufio.ScanWords)
 
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
 			for scanner.Scan() {
 				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
 					_, found := uniqFilter[str]
 					if !found {
 						uniqFilter[str] = true
-						results <- core.NewResult("baidu", str, nil)
+						select {
+						case <-ctx.Done():
+							resp.Body.Close()
+							return
+						case results <- core.NewResult("baidu", str, nil):
+							// move along
+						}
 					}
 				}
 			}

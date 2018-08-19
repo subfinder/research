@@ -2,8 +2,10 @@ package sources
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"strconv"
+	"time"
 
 	"github.com/subfinder/research/core"
 )
@@ -40,12 +42,21 @@ func (source *Bing) ProcessDomain(domain string) <-chan *core.Result {
 
 			scanner := bufio.NewScanner(resp.Body)
 
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
 			for scanner.Scan() {
 				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
 					_, found := uniqFilter[str]
 					if !found {
 						uniqFilter[str] = true
-						results <- core.NewResult("bing", str, nil)
+						select {
+						case results <- core.NewResult("bing", str, nil):
+							// move along
+						case <-ctx.Done():
+							resp.Body.Close()
+							return
+						}
 					}
 				}
 			}

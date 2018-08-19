@@ -14,17 +14,16 @@ func TestAsk(t *testing.T) {
 	results := []*core.Result{}
 
 	for result := range source.ProcessDomain(domain) {
-		t.Log(result)
 		fmt.Println(result)
 		results = append(results, result)
 		// Not waiting around to iterate all the possible pages.
-		if len(results) >= 15 {
+		if len(results) >= 5 {
 			break
 		}
 	}
 
-	if !(len(results) >= 15) {
-		t.Errorf("expected more than 15 result(s), got '%v'", len(results))
+	if !(len(results) >= 5) {
+		t.Errorf("expected more than 5 result(s), got '%v'", len(results))
 	}
 }
 
@@ -41,10 +40,7 @@ func TestAsk_multi_threaded(t *testing.T) {
 		go func(domain string) {
 			defer wg.Done()
 			for result := range source.ProcessDomain(domain) {
-				t.Log(result)
-				if result.IsSuccess() && result.IsFailure() {
-					t.Error("got a result that was a success and failure")
-				}
+				fmt.Println(result)
 				mx.Lock()
 				results = append(results, result)
 				mx.Unlock()
