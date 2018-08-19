@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -30,6 +31,7 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 			wg.Add(1)
 			go func(source Source) {
 				defer wg.Done()
+				defer fmt.Println(" **** cleaned up! **** ")
 				sourceResults := source.ProcessDomain(domain)
 
 				for {
