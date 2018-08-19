@@ -43,9 +43,9 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 								//fmt.Println("*** time after on pass along ***")
 								return
 							}
-						} else {
-							//fmt.Println("*** not ok ***")
-							return
+							//} else {
+							//	//fmt.Println("*** not ok ***")
+							//	return
 						}
 					case <-ctx.Done():
 						//fmt.Println("*** ctx done ***")
