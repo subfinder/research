@@ -22,15 +22,15 @@ import (
 //
 func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Result {
 	results := make(chan *Result)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	go func() {
+		defer cancel()
 		defer fmt.Println("*** done sending results ***")
 		defer close(results)
 		wg := sync.WaitGroup{}
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-		defer cancel()
 		for _, source := range options.Sources {
 			wg.Add(1)
-			go func(source Source, ctx context.Context, cancel context.CancelFunc) {
+			go func(source Source) {
 				defer wg.Done()
 				sourceResults := source.ProcessDomain(domain)
 				for {
@@ -45,7 +45,7 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 						return
 					}
 				}
-			}(source, ctx, cancel)
+			}(source)
 		}
 		wg.Wait()
 	}()
