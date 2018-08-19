@@ -43,7 +43,8 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 							select {
 							case results <- result:
 								// no timeout
-							case <-time.After(15 * time.Second):
+							//case <-time.After(15 * time.Second):
+							case <-ctx.Done():
 								fmt.Println("*** time after on pass along ***")
 								return
 							}
