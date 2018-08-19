@@ -22,9 +22,7 @@ import (
 //
 func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Result {
 	results := make(chan *Result)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	go func() {
-		defer cancel()
 		defer fmt.Println("*** done sending results ***")
 		defer close(results)
 		wg := sync.WaitGroup{}
@@ -32,14 +30,23 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 			wg.Add(1)
 			go func(source Source) {
 				defer wg.Done()
+				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				defer cancel()
 				sourceResults := source.ProcessDomain(domain)
 				for {
 					select {
-					case <-time.After(5 * time.Second):
+					case <-time.After(15 * time.Second):
 						fmt.Println("*** time after ***")
 						return
 					case result, ok := <-sourceResults:
 						if ok {
+							select {
+							case results <- result:
+								// no timeout
+							case <-time.After(15 * time.Second):
+								fmt.Println("*** time after on pass along ***")
+								return
+							}
 							results <- result
 						} else {
 							fmt.Println("*** not ok ***")
