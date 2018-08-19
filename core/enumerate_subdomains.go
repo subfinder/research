@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -22,16 +23,16 @@ import (
 func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Result {
 	results := make(chan *Result)
 	go func() {
+		defer fmt.Println("*** done sending results ***")
 		defer close(results)
 		wg := sync.WaitGroup{}
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
 		for _, source := range options.Sources {
 			wg.Add(1)
-			go func(source Source) {
+			go func(source Source, ctx context.Context, cancel context.CancelFunc) {
 				defer wg.Done()
 				sourceResults := source.ProcessDomain(domain)
-
 				for {
 					select {
 					case result, ok := <-sourceResults:
@@ -44,7 +45,7 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 						return
 					}
 				}
-			}(source)
+			}(source, ctx, cancel)
 		}
 		wg.Wait()
 	}()
