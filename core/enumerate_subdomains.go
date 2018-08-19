@@ -35,13 +35,18 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 				sourceResults := source.ProcessDomain(domain)
 				for {
 					select {
+					case <-time.After(5 * time.Second):
+						fmt.Println("*** time after ***")
+						return
 					case result, ok := <-sourceResults:
 						if ok {
 							results <- result
 						} else {
+							fmt.Println("*** not ok ***")
 							return
 						}
 					case <-ctx.Done():
+						fmt.Println("*** ctx done ***")
 						return
 					}
 				}
