@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -41,6 +42,7 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 							return
 						}
 					case <-ctx.Done():
+						fmt.Println(" *** context ended it *** ")
 						return
 					}
 				}
