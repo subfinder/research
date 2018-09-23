@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"context"
 	"errors"
+	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/subfinder/research/core"
 )
@@ -14,29 +14,42 @@ import (
 type Baidu struct{}
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
-func (source *Baidu) ProcessDomain(domain string) <-chan *core.Result {
+func (source *Baidu) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+
+	var resultLabel = "baidu"
+
 	results := make(chan *core.Result)
+
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- core.NewResult("baidu", nil, err)
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
 
 		uniqFilter := map[string]bool{}
 
 		for currentPage := 1; currentPage <= 750; currentPage++ {
-			resp, err := core.HTTPClient.Get("https://www.baidu.com/s?rn=10&pn=" + strconv.Itoa(currentPage) + "&wd=site%3A" + domain + "+-www.+&oq=site%3A" + domain + "+-www.+")
+			url := "https://www.baidu.com/s?rn=10&pn=" + strconv.Itoa(currentPage) + "&wd=site%3A" + domain + "+-www.+&oq=site%3A" + domain + "+-www.+"
+			req, err := http.NewRequest(http.MethodGet, url, nil)
 			if err != nil {
-				results <- core.NewResult("baidu", nil, err)
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				return
+			}
+
+			req.WithContext(ctx)
+
+			resp, err := core.HTTPClient.Do(req)
+			if err != nil {
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 				return
 			}
 
 			if resp.StatusCode != 200 {
 				resp.Body.Close()
-				results <- core.NewResult("baidu", nil, errors.New(resp.Status))
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
 				return
 			}
 
@@ -44,20 +57,14 @@ func (source *Baidu) ProcessDomain(domain string) <-chan *core.Result {
 
 			scanner.Split(bufio.ScanWords)
 
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-
 			for scanner.Scan() {
 				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
 					_, found := uniqFilter[str]
 					if !found {
 						uniqFilter[str] = true
-						select {
-						case <-ctx.Done():
+						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
 							resp.Body.Close()
 							return
-						case results <- core.NewResult("baidu", str, nil):
-							// move along
 						}
 					}
 				}

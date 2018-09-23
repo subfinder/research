@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"time"
+	"net/http"
 
 	"github.com/subfinder/research/core"
 )
@@ -13,53 +13,66 @@ import (
 type ThreatCrowd struct{}
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
-func (source *ThreatCrowd) ProcessDomain(domain string) <-chan *core.Result {
+func (source *ThreatCrowd) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+
+	var resultLabel = "threatcrowd"
+
 	results := make(chan *core.Result)
+
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- core.NewResult("threatcrowd", nil, err)
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
 
 		uniqFilter := map[string]bool{}
 
-		resp, err := core.HTTPClient.Get("https://www.threatcrowd.org/searchApi/v2/domain/report/?domain=" + domain)
+		req, err := http.NewRequest(http.MethodGet, "https://www.threatcrowd.org/searchApi/v2/domain/report/?domain="+domain, nil)
 		if err != nil {
-			results <- core.NewResult("threatcrowd", nil, err)
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
 
+		req.WithContext(ctx)
+
+		resp, err := core.HTTPClient.Do(req)
+		if err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
+		defer resp.Body.Close()
+
 		if resp.StatusCode != 200 {
-			resp.Body.Close()
-			results <- core.NewResult("threatcrowd", nil, errors.New(resp.Status))
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
 		scanner := bufio.NewScanner(resp.Body)
 
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
 		for scanner.Scan() {
+			if ctx.Err() != nil {
+				return
+			}
 			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
-					select {
-					case results <- core.NewResult("threatcrowd", str, nil):
-						// move along
-					case <-ctx.Done():
-						resp.Body.Close()
+					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
 						return
 					}
 				}
 			}
 		}
 
-		resp.Body.Close()
+		err = scanner.Err()
+
+		if err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
 
 	}(domain, results)
 	return results

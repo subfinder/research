@@ -3,6 +3,7 @@ package sources
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -31,7 +32,7 @@ type riddlerAuthenticationResponse struct {
 }
 
 // Authenticate uses a given username and password to retrieve the APIToken.
-func (source *Riddler) Authenticate() (bool, error) {
+func (source *Riddler) Authenticate(ctx context.Context) (bool, error) {
 	var data = []byte(`{"email":"` + source.Email + `", "password":"` + source.Password + `"}`)
 
 	// Create a post request to get subdomain data
@@ -41,6 +42,8 @@ func (source *Riddler) Authenticate() (bool, error) {
 	}
 
 	req.Header.Add("Content-Type", "application/json")
+
+	req.WithContext(ctx)
 
 	resp, err := core.HTTPClient.Do(req)
 	if err != nil {
@@ -65,34 +68,37 @@ func (source *Riddler) Authenticate() (bool, error) {
 }
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
-func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
+func (source *Riddler) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+
+	var resultLabel = "riddler"
+
 	results := make(chan *core.Result)
+
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		// check if only email was given
 		if source.Email != "" && source.Password == "" {
-			results <- core.NewResult("riddler", nil, errors.New("given email, but no password"))
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New("given email, but no password")))
 		}
 
 		// check if only password was given
 		if source.Email == "" && source.Password != "" {
-			results <- core.NewResult("riddler", nil, errors.New("given password, but no email"))
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New("given password, but no email")))
 		}
 
 		// check if source needs to be authenticated
 		if source.APIToken == "" && source.Email != "" && source.Password != "" {
-			_, err := source.Authenticate()
+			_, err := source.Authenticate(ctx)
 			if err != nil {
-				results <- core.NewResult("riddler", nil, err)
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 				return
 			}
 		}
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- core.NewResult("riddler", nil, err)
-			return
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 		}
 
 		uniqFilter := map[string]bool{}
@@ -108,16 +114,17 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 			req.Header.Set("Content-type", "application/json")
 			req.Header.Set("Authentication-Token", source.APIToken)
 
+			req.WithContext(ctx)
+
 			resp, err := core.HTTPClient.Do(req)
 			if err != nil {
-				results <- core.NewResult("riddler", nil, err)
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 				return
 			}
-
 			defer resp.Body.Close()
 
 			if resp.StatusCode != 200 {
-				results <- core.NewResult("riddler", nil, errors.New(resp.Status))
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
 				return
 			}
 
@@ -125,7 +132,7 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 
 			err = json.NewDecoder(resp.Body).Decode(&hostResponse)
 			if err != nil {
-				results <- core.NewResult("riddler", nil, err)
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 				return
 			}
 
@@ -134,7 +141,9 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 					_, found := uniqFilter[str]
 					if !found {
 						uniqFilter[str] = true
-						results <- core.NewResult("riddler", str, nil)
+						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+							return
+						}
 					}
 				}
 			}
@@ -145,13 +154,13 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 			// not authenticated
 			resp, err = core.HTTPClient.Get("https://riddler.io/search/exportcsv?q=pld:" + domain)
 			if err != nil {
-				results <- core.NewResult("riddler", nil, err)
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 				return
 			}
 			defer resp.Body.Close()
 
 			if resp.StatusCode != 200 {
-				results <- core.NewResult("riddler", nil, errors.New(resp.Status))
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
 				return
 			}
 
@@ -162,7 +171,9 @@ func (source *Riddler) ProcessDomain(domain string) <-chan *core.Result {
 					_, found := uniqFilter[str]
 					if !found {
 						uniqFilter[str] = true
-						results <- core.NewResult("riddler", str, nil)
+						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+							return
+						}
 					}
 				}
 			}

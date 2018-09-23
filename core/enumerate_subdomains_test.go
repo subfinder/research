@@ -1,27 +1,35 @@
 package core
 
-import "testing"
-import "fmt"
+import (
+	"context"
+	"fmt"
+	"testing"
+	"time"
+)
 
 type FakeSource1 struct{}
 type FakeSource2 struct{}
 
-func (s *FakeSource1) ProcessDomain(domain string) <-chan *Result {
+func (s *FakeSource1) ProcessDomain(ctx context.Context, domain string) <-chan *Result {
 	results := make(chan *Result)
+
 	go func(domain string) {
 		defer close(results)
-		results <- &Result{Success: "a." + domain}
-		results <- &Result{Success: "b." + domain}
-		results <- &Result{Success: "c." + domain}
+		for _, subdomain := range []string{"a.", "b.", "c."} {
+			time.Sleep(2 * time.Second)
+			results <- &Result{Success: subdomain + domain}
+		}
 	}(domain)
 	return results
 }
 
-func (s *FakeSource2) ProcessDomain(domain string) <-chan *Result {
+func (s *FakeSource2) ProcessDomain(ctx context.Context, domain string) <-chan *Result {
 	results := make(chan *Result)
+
 	go func(domain string) {
 		defer close(results)
 		for _, subdomain := range []string{"admin.", "user.", "mod."} {
+			time.Sleep(2 * time.Second)
 			results <- &Result{Success: subdomain + domain}
 		}
 	}(domain)
@@ -30,7 +38,15 @@ func (s *FakeSource2) ProcessDomain(domain string) <-chan *Result {
 
 func TestEnumerateSubdomains(t *testing.T) {
 	domain := "google.com"
-	options := &EnumerationOptions{Sources: []Source{&FakeSource1{}, &FakeSource2{}}}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	options := &EnumerationOptions{
+		Sources: []Source{&FakeSource1{}, &FakeSource2{}},
+		Context: ctx,
+		Cancel:  cancel,
+	}
 
 	counter := 0
 
@@ -47,12 +63,19 @@ func TestEnumerateSubdomains(t *testing.T) {
 func ExampleEnumerateSubdomains() {
 	domain := "google.com"
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	sources := []Source{
 		&FakeSource1{},
 		&FakeSource2{},
 	}
 
-	options := &EnumerationOptions{Sources: sources}
+	options := &EnumerationOptions{
+		Sources: sources,
+		Context: ctx,
+		Cancel:  cancel,
+	}
 
 	counter := 0
 
