@@ -2,6 +2,7 @@ package sources
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"net/http"
 	"strings"
@@ -15,14 +16,17 @@ type HackerTarget struct {
 }
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
-func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
+func (source *HackerTarget) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+	var resultLabel = "hackertarget"
+
 	results := make(chan *core.Result)
+
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- core.NewResult("hackertarget", nil, err)
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
 
@@ -31,20 +35,31 @@ func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 		// get response from the API, optionally with an API key
 		var resp *http.Response
 
+		// http req
+		var req *http.Request
+
 		// check API key
 		if source.APIKey != "" {
-			resp, err = core.HTTPClient.Get("https://api.hackertarget.com/hostsearch/?q=" + domain + "&apikey=" + source.APIKey)
+			req, err = http.NewRequest(http.MethodGet, "https://api.hackertarget.com/hostsearch/?q="+domain+"&apikey="+source.APIKey, nil)
 		} else {
-			resp, err = core.HTTPClient.Get("https://api.hackertarget.com/hostsearch/?q=" + domain)
+			req, err = http.NewRequest(http.MethodGet, "https://api.hackertarget.com/hostsearch/?q="+domain, nil)
 		}
 		if err != nil {
-			results <- core.NewResult("hackertarget", nil, err)
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
+
+		req.WithContext(ctx)
+
+		resp, err = core.HTTPClient.Do(req)
+		if err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			results <- core.NewResult("hackertarget", nil, errors.New(resp.Status))
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
@@ -54,14 +69,16 @@ func (source *HackerTarget) ProcessDomain(domain string) <-chan *core.Result {
 		for scanner.Scan() {
 			str := strings.Split(scanner.Text(), ",")[0]
 			if strings.Contains(str, "API count exceeded") {
-				results <- core.NewResult("hackertarget", nil, errors.New(str))
+				sendResultWithContext(ctx, results, core.NewResult("hackertarget", nil, errors.New(str)))
 				return
 			}
 			for _, str := range domainExtractor.FindAllString(str, -1) {
 				_, found := uniqFilter[str]
 				if !found {
 					uniqFilter[str] = true
-					results <- core.NewResult("hackertarget", str, nil)
+					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+						return
+					}
 				}
 			}
 		}

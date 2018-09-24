@@ -1,13 +1,14 @@
 package core
 
-import "time"
+import "context"
 
 // EnumerationOptions provides all the data needed for subdomain
 // enumeration. This includes all the sources which will be
 // queried to find them.
 type EnumerationOptions struct {
 	Sources []Source
-	Timeout time.Duration
+	Context context.Context
+	Cancel  context.CancelFunc
 }
 
 // HasSources checks if the EnumerationOptions have any source defined.

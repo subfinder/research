@@ -1,12 +1,14 @@
 package core
 
-import "sync"
-import "bytes"
-import "errors"
-import "fmt"
-import "time"
-import "strings"
-import "encoding/json"
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
+	"sync"
+	"time"
+)
 
 // Result contains the information from any given
 // source. Upon success, a Source source should

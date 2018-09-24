@@ -3,8 +3,10 @@ package sources
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
 
 	"github.com/subfinder/research/core"
 )
@@ -17,28 +19,40 @@ type crtshObject struct {
 }
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
-func (source *CrtSh) ProcessDomain(domain string) <-chan *core.Result {
+func (source *CrtSh) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+
+	var resultLabel = "crtsh"
+
 	results := make(chan *core.Result)
+
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- core.NewResult("crtsh", nil, err)
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
 
 		uniqFilter := map[string]bool{}
 
-		resp, err := core.HTTPClient.Get("https://crt.sh/?q=%25." + domain + "&output=json")
+		req, err := http.NewRequest(http.MethodGet, "https://crt.sh/?q=%25."+domain+"&output=json", nil)
 		if err != nil {
-			results <- core.NewResult("crtsh", nil, err)
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
+
+		req.WithContext(ctx)
+
+		resp, err := core.HTTPClient.Do(req)
+		if err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			results <- core.NewResult("crtsh", nil, errors.New(resp.Status))
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
@@ -48,6 +62,9 @@ func (source *CrtSh) ProcessDomain(domain string) <-chan *core.Result {
 
 		jsonBuffer := bytes.Buffer{}
 		for scanner.Scan() {
+			if ctx.Err() != nil {
+				return
+			}
 			jsonBuffer.Write(scanner.Bytes())
 			if scanner.Bytes()[0] == 125 { // if "}"
 				object := &crtshObject{}
@@ -55,7 +72,7 @@ func (source *CrtSh) ProcessDomain(domain string) <-chan *core.Result {
 				err = json.Unmarshal(jsonBuffer.Bytes(), &object)
 				jsonBuffer.Reset()
 				if err != nil {
-					results <- core.NewResult("crtsh", nil, err)
+					sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 					continue
 				}
 				// This could potentially be made more efficient.
@@ -63,9 +80,18 @@ func (source *CrtSh) ProcessDomain(domain string) <-chan *core.Result {
 					_, found := uniqFilter[str]
 					if !found {
 						uniqFilter[str] = true
-						results <- core.NewResult("crtsh", str, nil)
+						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+							return
+						}
 					}
 				}
+			}
+
+			err = scanner.Err()
+
+			if err != nil {
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				return
 			}
 		}
 	}(domain, results)

@@ -3,7 +3,9 @@ package sources
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
+	"net/http"
 
 	"github.com/subfinder/research/core"
 )
@@ -12,28 +14,40 @@ import (
 type WaybackArchive struct{}
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
-func (source *WaybackArchive) ProcessDomain(domain string) <-chan *core.Result {
+func (source *WaybackArchive) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+
+	var resultLabel = "waybackarchive"
+
 	results := make(chan *core.Result)
+
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
-			results <- core.NewResult("waybackarchive", nil, err)
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
 
 		uniqFilter := map[string]bool{}
 
-		resp, err := core.HTTPClient.Get("http://web.archive.org/cdx/search/cdx?url=*." + domain + "/*&output=json&fl=original&collapse=urlkey")
+		req, err := http.NewRequest(http.MethodGet, "http://web.archive.org/cdx/search/cdx?url=*."+domain+"/*&output=json&fl=original&collapse=urlkey", nil)
 		if err != nil {
-			results <- core.NewResult("waybackarchive", nil, err)
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
+
+		req.WithContext(ctx)
+
+		resp, err := core.HTTPClient.Do(req)
+		if err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			results <- core.NewResult("waybackarchive", nil, errors.New(resp.Status))
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
@@ -44,18 +58,30 @@ func (source *WaybackArchive) ProcessDomain(domain string) <-chan *core.Result {
 		jsonBuffer := bytes.Buffer{}
 
 		for scanner.Scan() {
+			if ctx.Err() != nil {
+				return
+			}
 			if scanner.Bytes()[0] == 44 { // if ","
 				str := string(jsonBuffer.Bytes())
 				jsonBuffer.Reset()
 				str = domainExtractor.FindString(str)
 				_, found := uniqFilter[str]
-				if !found {
+				if !found && str != "" {
 					uniqFilter[str] = true
-					results <- core.NewResult("waybackarchive", str, nil)
+					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+						return
+					}
 				}
 			} else {
 				jsonBuffer.Write(scanner.Bytes())
 			}
+		}
+
+		err = scanner.Err()
+
+		if err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
 		}
 	}(domain, results)
 	return results
