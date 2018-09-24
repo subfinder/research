@@ -35,11 +35,12 @@ func main() {
 	results := make(chan *core.Result)
 	jobs := sync.WaitGroup{}
 
-	var jobCount = 0
-
-	var cmdEnumerateVerboseOpt bool
-	var cmdEnumerateInsecureOpt bool
-	var cmdEnumerateLimitOpt int
+	// enumerate command options
+	var (
+		cmdEnumerateVerboseOpt  bool
+		cmdEnumerateInsecureOpt bool
+		cmdEnumerateLimitOpt    int
+	)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -75,7 +76,6 @@ func main() {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, domain := range args {
-				jobCount++
 				jobs.Add(1)
 				go func(domain string) {
 					defer jobs.Done()
