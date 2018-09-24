@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
 	"sync"
 	"time"
 
@@ -32,12 +34,29 @@ var sourcesList = []core.Source{
 func main() {
 	results := make(chan *core.Result)
 	jobs := sync.WaitGroup{}
+
+	var jobCount = 0
+
 	var cmdEnumerateVerboseOpt bool
 	var cmdEnumerateInsecureOpt bool
 	var cmdEnumerateLimitOpt int
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
+
+	cleanup := func() {
+		cancel()
+		fmt.Println("exiting")
+		os.Exit(1)
+	}
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for range c {
+			cleanup()
+		}
+	}()
 
 	opts := &core.EnumerationOptions{
 		Sources: sourcesList,
@@ -57,6 +76,7 @@ func main() {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, domain := range args {
+				jobCount++
 				jobs.Add(1)
 				go func(domain string) {
 					defer jobs.Done()
@@ -76,14 +96,14 @@ func main() {
 					fmt.Println(result.Type, result.Failure)
 				}
 				if cmdEnumerateLimitOpt != 0 && cmdEnumerateLimitOpt == count {
-					cancel()
+					cleanup()
 				}
 			}
 		},
 	}
-	cmdEnumerate.Flags().IntVar(&cmdEnumerateLimitOpt, "limit", 0, "Limit the reported results to the given number.")
-	cmdEnumerate.Flags().BoolVar(&cmdEnumerateVerboseOpt, "verbose", false, "Show errors and other available diagnostic information.")
-	cmdEnumerate.Flags().BoolVar(&cmdEnumerateInsecureOpt, "insecure", false, "Use potentially insecure sources using http.")
+	cmdEnumerate.Flags().IntVar(&cmdEnumerateLimitOpt, "limit", 0, "limit the reported results to the given number.")
+	cmdEnumerate.Flags().BoolVar(&cmdEnumerateVerboseOpt, "verbose", false, "show errors and other available diagnostic information.")
+	cmdEnumerate.Flags().BoolVar(&cmdEnumerateInsecureOpt, "insecure", false, "use potentially insecure sources using http.")
 
 	var rootCmd = &cobra.Command{Use: "subzero"}
 	rootCmd.AddCommand(cmdEnumerate)
