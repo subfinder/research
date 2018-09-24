@@ -46,8 +46,7 @@ func main() {
 
 	cleanup := func() {
 		cancel()
-		fmt.Println("exiting")
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	c := make(chan os.Signal, 1)
