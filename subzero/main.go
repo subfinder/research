@@ -24,11 +24,13 @@ var sourcesList = []core.Source{
 	&sources.Threatminer{},
 	&sources.WaybackArchive{},
 	&sources.DNSDbDotCom{},
+	&sources.DNSTable{},
 	&sources.Bing{},
 	&sources.Yahoo{},
 	&sources.Baidu{},
 	&sources.Entrust{},
 	&sources.ThreatCrowd{},
+	&sources.Virustotal{},
 }
 
 func main() {
