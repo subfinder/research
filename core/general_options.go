@@ -80,6 +80,7 @@ func (opts *GeneralOptions) Printable() string {
 		opts.Resolvers)
 }
 
+// Print takes the Printable form of the GeneralOptions and outputs it to STDOUT.
 func (opts *GeneralOptions) Print() {
 	fmt.Println(opts.Printable())
 }
