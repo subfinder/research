@@ -51,6 +51,7 @@ func NewDefaultGeneralOptions() *GeneralOptions {
 	}
 }
 
+// Printable returns a formatted string of the GeneralOptions.
 func (opts *GeneralOptions) Printable() string {
 	return fmt.Sprintf(
 		"Verbose:\t '%v'\n"+
