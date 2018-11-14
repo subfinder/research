@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/subfinder/research/core"
 )
@@ -14,6 +15,7 @@ type ArchiveIs struct{}
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *ArchiveIs) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+
 	var resultLabel = "archiveis"
 
 	results := make(chan *core.Result)
@@ -29,49 +31,52 @@ func (source *ArchiveIs) ProcessDomain(ctx context.Context, domain string) <-cha
 
 		uniqFilter := map[string]bool{}
 
-		req, err := http.NewRequest(http.MethodGet, "https://archive.is/*."+domain, nil)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
-
-		req.WithContext(ctx)
-
-		resp, err := core.HTTPClient.Do(req)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
-			return
-		}
-
-		scanner := bufio.NewScanner(resp.Body)
-
-		for scanner.Scan() {
+		for currentPage := 0; currentPage <= 750; currentPage += 10 {
 			if ctx.Err() != nil {
 				return
 			}
-			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				_, found := uniqFilter[str]
-				if !found {
-					uniqFilter[str] = true
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-						return
+			url := "https://archive.is/offset=" + strconv.Itoa(currentPage) + "/*." + domain
+
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			if err != nil {
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				return
+			}
+
+			req.WithContext(ctx)
+
+			resp, err := core.HTTPClient.Do(req)
+			if err != nil {
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				return
+			}
+
+			if resp.StatusCode != 200 {
+				resp.Body.Close()
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+				return
+			}
+
+			scanner := bufio.NewScanner(resp.Body)
+
+			scanner.Split(bufio.ScanWords)
+
+			for scanner.Scan() {
+				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
+					_, found := uniqFilter[str]
+					if !found {
+						uniqFilter[str] = true
+						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+							resp.Body.Close()
+							return
+						}
 					}
 				}
 			}
+
+			resp.Body.Close()
 		}
 
-		err = scanner.Err()
-
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
 	}(domain, results)
 	return results
 }
