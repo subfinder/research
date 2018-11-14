@@ -35,6 +35,7 @@ func (source *ArchiveIs) ProcessDomain(ctx context.Context, domain string) <-cha
 			if ctx.Err() != nil {
 				return
 			}
+
 			url := "https://archive.is/offset=" + strconv.Itoa(currentPage) + "/*." + domain
 
 			req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -62,7 +63,13 @@ func (source *ArchiveIs) ProcessDomain(ctx context.Context, domain string) <-cha
 			scanner.Split(bufio.ScanWords)
 
 			for scanner.Scan() {
+				if ctx.Err() != nil {
+					return
+				}
 				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
+					if ctx.Err() != nil {
+						return
+					}
 					_, found := uniqFilter[str]
 					if !found {
 						uniqFilter[str] = true
