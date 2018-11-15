@@ -2,6 +2,7 @@ package sources
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -26,6 +27,32 @@ func TestBaidu(t *testing.T) {
 
 	if !(len(results) >= 20) {
 		t.Errorf("expected more than 20 result(s), got '%v'", len(results))
+	}
+}
+
+func TestBaiduRecursive(t *testing.T) {
+	domain := "google.com"
+	source := &Baidu{}
+	results := []*core.Result{}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	options := &core.EnumerationOptions{
+		Recursive: true,
+		Context:   ctx,
+		Cancel:    cancel,
+		Sources:   []core.Source{source},
+	}
+
+	for result := range core.EnumerateSubdomains(domain, options) {
+		results = append(results, result)
+		fmt.Println(result)
+
+	}
+
+	if !(len(results) >= 5) {
+		t.Errorf("expected more than 5 result(s), got '%v'", len(results))
+		t.Error(ctx.Err())
 	}
 }
 

@@ -26,6 +26,28 @@ func TestDNSTable(t *testing.T) {
 	}
 }
 
+func TestDNSTableRecursive(t *testing.T) {
+	domain := "bing.com"
+	source := &DNSTable{}
+	results := []*core.Result{}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	options := &core.EnumerationOptions{
+		Recursive: true,
+		Context:   ctx,
+		Cancel:    cancel,
+		Sources:   []core.Source{source},
+	}
+
+	for result := range core.EnumerateSubdomains(domain, options) {
+		results = append(results, result)
+		fmt.Println(result)
+	}
+
+	fmt.Println(len(results), ctx.Err())
+}
+
 // func TestFindSubdomainsDotComMultiThreaded(t *testing.T) {
 // 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 // 	source := FindSubdomainsDotCom{}

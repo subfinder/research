@@ -30,6 +30,32 @@ func TestBing(t *testing.T) {
 	}
 }
 
+func TestBingRecursive(t *testing.T) {
+	domain := "google.com"
+	source := &Bing{}
+	results := []*core.Result{}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	options := &core.EnumerationOptions{
+		Recursive: true,
+		Context:   ctx,
+		Cancel:    cancel,
+		Sources:   []core.Source{source},
+	}
+
+	for result := range core.EnumerateSubdomains(domain, options) {
+		results = append(results, result)
+		fmt.Println(result)
+
+	}
+
+	if !(len(results) >= 5) {
+		t.Errorf("expected more than 5 result(s), got '%v'", len(results))
+		t.Error(ctx.Err())
+	}
+}
+
 //func TestBing_multi_threaded(t *testing.T) {
 //	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 //	source := Bing{}

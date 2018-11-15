@@ -32,6 +32,32 @@ func TestAsk(t *testing.T) {
 	}
 }
 
+func TestAskRecursive(t *testing.T) {
+	domain := "google.com"
+	source := &Ask{}
+	results := []*core.Result{}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	options := &core.EnumerationOptions{
+		Recursive: true,
+		Context:   ctx,
+		Cancel:    cancel,
+		Sources:   []core.Source{source},
+	}
+
+	for result := range core.EnumerateSubdomains(domain, options) {
+		results = append(results, result)
+		fmt.Println(result)
+
+	}
+
+	if !(len(results) >= 5) {
+		t.Errorf("expected more than 5 result(s), got '%v'", len(results))
+		t.Error(ctx.Err())
+	}
+}
+
 //func TestAsk_multi_threaded(t *testing.T) {
 //	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 //	source := Ask{}

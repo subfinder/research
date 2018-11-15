@@ -24,6 +24,36 @@ func TestCrtSh(t *testing.T) {
 	if !(len(results) >= 90) {
 		t.Errorf("expected more than 90 result(s), got '%v'", len(results))
 	}
+
+	fmt.Println(len(results))
+}
+
+func TestCrtShRecursive(t *testing.T) {
+	domain := "bing.com"
+	source := &CrtSh{}
+	results := []*core.Result{}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	options := &core.EnumerationOptions{
+		Recursive: true,
+		Context:   ctx,
+		Cancel:    cancel,
+		Sources:   []core.Source{source},
+	}
+
+	for result := range core.EnumerateSubdomains(domain, options) {
+		results = append(results, result)
+		fmt.Println(result)
+
+	}
+
+	if !(len(results) >= 5) {
+		t.Errorf("expected more than 5 result(s), got '%v'", len(results))
+		t.Error(ctx.Err())
+	}
+
+	fmt.Println(len(results), ctx.Err())
 }
 
 //func TestCrtSh_MultiThreaded(t *testing.T) {

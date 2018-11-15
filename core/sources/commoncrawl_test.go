@@ -26,6 +26,32 @@ func TestCommonCrawlDotOrg(t *testing.T) {
 	}
 }
 
+func TestCommonCrawlDotOrgRecursive(t *testing.T) {
+	domain := "bing.com"
+	source := &CommonCrawlDotOrg{}
+	results := []*core.Result{}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	options := &core.EnumerationOptions{
+		Recursive: true,
+		Context:   ctx,
+		Cancel:    cancel,
+		Sources:   []core.Source{source},
+	}
+
+	for result := range core.EnumerateSubdomains(domain, options) {
+		results = append(results, result)
+		fmt.Println(result)
+
+	}
+
+	if !(len(results) >= 3) {
+		t.Errorf("expected at least 3 result(s), got '%v'", len(results))
+		t.Error(ctx.Err())
+	}
+}
+
 // func TestCommonCrawlDotOrg_multi_threaded(t *testing.T) {
 // 	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 // 	source := CommonCrawlDotOrg{}

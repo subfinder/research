@@ -26,6 +26,34 @@ func TestDNSDbDotCom(t *testing.T) {
 	}
 }
 
+func TestDNSDbDotComRecursive(t *testing.T) {
+	domain := "bing.com"
+	source := &DNSDbDotCom{}
+	results := []*core.Result{}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	options := &core.EnumerationOptions{
+		Recursive: true,
+		Context:   ctx,
+		Cancel:    cancel,
+		Sources:   []core.Source{source},
+	}
+
+	for result := range core.EnumerateSubdomains(domain, options) {
+		results = append(results, result)
+		fmt.Println(result)
+
+	}
+
+	if !(len(results) >= 5) {
+		t.Errorf("expected more than 5 result(s), got '%v'", len(results))
+		t.Error(ctx.Err())
+	}
+
+	fmt.Println(len(results), ctx.Err())
+}
+
 //func TestDNSDbDotComMultiThreaded(t *testing.T) {
 //	domains := []string{"google.com", "bing.com", "yahoo.com", "duckduckgo.com"}
 //	source := &DNSDbDotCom{}
