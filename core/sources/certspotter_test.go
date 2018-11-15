@@ -16,9 +16,18 @@ func TestCertSpotter(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
+	uniqFilter := map[string]bool{}
+
 	for result := range source.ProcessDomain(ctx, domain) {
-		fmt.Println(result)
-		results = append(results, result)
+		if result.IsSuccess() {
+			str := result.Success.(string)
+			_, found := uniqFilter[str]
+			if !found {
+				uniqFilter[str] = true
+				fmt.Println(result)
+				results = append(results, result)
+			}
+		}
 	}
 
 	if !(len(results) >= 3000) {
