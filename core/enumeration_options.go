@@ -6,9 +6,10 @@ import "context"
 // enumeration. This includes all the sources which will be
 // queried to find them.
 type EnumerationOptions struct {
-	Sources []Source
-	Context context.Context
-	Cancel  context.CancelFunc
+	Sources   []Source
+	Context   context.Context
+	Cancel    context.CancelFunc
+	Recursive bool
 }
 
 // HasSources checks if the EnumerationOptions have any source defined.
