@@ -60,6 +60,32 @@ func TestEnumerateSubdomains(t *testing.T) {
 	}
 }
 
+func TestEnumerateSubdomains_Recursively(t *testing.T) {
+	domain := "google.com"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	options := &EnumerationOptions{
+		Sources:   []Source{&FakeSource1{}, &FakeSource2{}},
+		Context:   ctx,
+		Cancel:    cancel,
+		Recursive: true,
+	}
+
+	counter := 0
+
+	for result := range EnumerateSubdomains(domain, options) {
+		counter++
+		if counter == 15 {
+			cancel()
+		}
+		fmt.Println(result)
+	}
+
+	t.Log(counter)
+}
+
 func ExampleEnumerateSubdomains() {
 	domain := "google.com"
 

@@ -53,6 +53,26 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 						if ok {
 							select {
 							case results <- result:
+								// initial recursion implementation
+								if options.Recursive && result.IsSuccess() {
+									str, ok := result.Success.(string)
+									if !ok {
+										continue
+									}
+									wg.Add(1)
+
+									go func(results chan *Result, domain string, options *EnumerationOptions) {
+										defer wg.Done()
+										for result := range EnumerateSubdomains(domain, options) {
+											select {
+											case <-options.Context.Done():
+												return
+											case results <- result:
+												continue
+											}
+										}
+									}(results, str, options)
+								}
 								// no timeout
 							case <-options.Context.Done():
 								// timed out while passing result to combined results channel
