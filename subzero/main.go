@@ -31,6 +31,7 @@ var sourcesList = []core.Source{
 	&sources.Entrust{},
 	&sources.ThreatCrowd{},
 	&sources.Virustotal{},
+	&sources.DNSDumpster{},
 }
 
 func main() {
