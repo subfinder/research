@@ -63,7 +63,6 @@ func main() {
 	opts := &core.EnumerationOptions{
 		Sources: sourcesList,
 		Context: ctx,
-		Cancel:  cancel,
 	}
 
 	var cmdEnumerate = &cobra.Command{
