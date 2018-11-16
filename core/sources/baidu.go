@@ -29,8 +29,6 @@ func (source *Baidu) ProcessDomain(ctx context.Context, domain string) <-chan *c
 			return
 		}
 
-		uniqFilter := map[string]bool{}
-
 		for currentPage := 1; currentPage <= 750; currentPage++ {
 			url := "https://www.baidu.com/s?rn=10&pn=" + strconv.Itoa(currentPage) + "&wd=site%3A" + domain + "+-www.+&oq=site%3A" + domain + "+-www.+"
 			req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -58,14 +56,14 @@ func (source *Baidu) ProcessDomain(ctx context.Context, domain string) <-chan *c
 			scanner.Split(bufio.ScanWords)
 
 			for scanner.Scan() {
+				if ctx.Err() != nil {
+					return
+				}
+
 				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-					_, found := uniqFilter[str]
-					if !found {
-						uniqFilter[str] = true
-						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-							resp.Body.Close()
-							return
-						}
+					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+						resp.Body.Close()
+						return
 					}
 				}
 			}

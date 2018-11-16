@@ -39,11 +39,10 @@ func TestBingRecursive(t *testing.T) {
 
 	options := &core.EnumerationOptions{
 		Recursive: true,
-		Context:   ctx,
 		Sources:   []core.Source{source},
 	}
 
-	for result := range core.EnumerateSubdomains(domain, options) {
+	for result := range core.EnumerateSubdomains(ctx, domain, options) {
 		results = append(results, result)
 		fmt.Println(result)
 

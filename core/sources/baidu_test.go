@@ -31,19 +31,19 @@ func TestBaidu(t *testing.T) {
 }
 
 func TestBaiduRecursive(t *testing.T) {
+	//uniqFilter := map[string]bool{}
 	domain := "google.com"
 	source := &Baidu{}
 	results := []*core.Result{}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
 	defer cancel()
 
 	options := &core.EnumerationOptions{
 		Recursive: true,
-		Context:   ctx,
 		Sources:   []core.Source{source},
 	}
 
-	for result := range core.EnumerateSubdomains(domain, options) {
+	for result := range core.EnumerateSubdomains(ctx, domain, options) {
 		results = append(results, result)
 		fmt.Println(result)
 
@@ -53,6 +53,8 @@ func TestBaiduRecursive(t *testing.T) {
 		t.Errorf("expected more than 5 result(s), got '%v'", len(results))
 		t.Error(ctx.Err())
 	}
+
+	fmt.Println(len(results), ctx.Err())
 }
 
 //func TestBaidu_multi_threaded(t *testing.T) {
