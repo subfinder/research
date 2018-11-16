@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"sync"
 )
 
@@ -17,7 +18,7 @@ import (
 //                                    Source3.ProcessDomain
 //
 //
-func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Result {
+func EnumerateSubdomains(ctx context.Context, domain string, options *EnumerationOptions) <-chan *Result {
 	// this channel of results will be used to combine the result channels
 	// from each source configured in the EnumerationOptions
 	results := make(chan *Result)
@@ -42,7 +43,7 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 				defer wg.Done()
 
 				// get the results channel from the source calling the ProcessDomain method on it
-				sourceResults := source.ProcessDomain(options.Context, domain)
+				sourceResults := source.ProcessDomain(ctx, domain)
 
 				// for loop over results in a select to allow for timeout
 				for {
@@ -61,9 +62,9 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 
 									go func(results chan *Result, domain string, options *EnumerationOptions) {
 										defer wg.Done()
-										for result := range EnumerateSubdomains(domain, options) {
+										for result := range EnumerateSubdomains(ctx, domain, options) {
 											select {
-											case <-options.Context.Done():
+											case <-ctx.Done():
 												return
 											case results <- result:
 												continue
@@ -72,7 +73,7 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 									}(results, str, options)
 								}
 								// no timeout
-							case <-options.Context.Done():
+							case <-ctx.Done():
 								// timed out while passing result to combined results channel
 								return
 							}
@@ -80,7 +81,7 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 							// failed to retrieve result from results channel
 							return
 						}
-					case <-options.Context.Done():
+					case <-ctx.Done():
 						// timed out while getting a result from the source's results channel
 						return
 					}

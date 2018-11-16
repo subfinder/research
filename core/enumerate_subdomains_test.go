@@ -44,12 +44,11 @@ func TestEnumerateSubdomains(t *testing.T) {
 
 	options := &EnumerationOptions{
 		Sources: []Source{&FakeSource1{}, &FakeSource2{}},
-		Context: ctx,
 	}
 
 	counter := 0
 
-	for result := range EnumerateSubdomains(domain, options) {
+	for result := range EnumerateSubdomains(ctx, domain, options) {
 		counter++
 		fmt.Println(result)
 	}
@@ -67,13 +66,12 @@ func TestEnumerateSubdomains_Recursively(t *testing.T) {
 
 	options := &EnumerationOptions{
 		Sources:   []Source{&FakeSource1{}, &FakeSource2{}},
-		Context:   ctx,
 		Recursive: true,
 	}
 
 	counter := 0
 
-	for result := range EnumerateSubdomains(domain, options) {
+	for result := range EnumerateSubdomains(ctx, domain, options) {
 		counter++
 		if counter == 15 {
 			cancel()
@@ -97,12 +95,11 @@ func ExampleEnumerateSubdomains() {
 
 	options := &EnumerationOptions{
 		Sources: sources,
-		Context: ctx,
 	}
 
 	counter := 0
 
-	for result := range EnumerateSubdomains(domain, options) {
+	for result := range EnumerateSubdomains(ctx, domain, options) {
 		if result.Failure == nil {
 			counter++
 		}
