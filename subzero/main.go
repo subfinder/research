@@ -82,7 +82,7 @@ func main() {
 			}
 
 			if cmdEnumerateTimeoutOpt != 30 {
-				ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
+				ctx, cancel = context.WithTimeout(context.Background(), time.Duration(cmdEnumerateTimeoutOpt)*time.Second)
 				defer cancel()
 			}
 		},
