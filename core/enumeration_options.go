@@ -8,7 +8,6 @@ import "context"
 type EnumerationOptions struct {
 	Sources   []Source
 	Context   context.Context
-	Cancel    context.CancelFunc
 	Recursive bool
 	Debug     bool
 }

@@ -45,7 +45,6 @@ func TestEnumerateSubdomains(t *testing.T) {
 	options := &EnumerationOptions{
 		Sources: []Source{&FakeSource1{}, &FakeSource2{}},
 		Context: ctx,
-		Cancel:  cancel,
 	}
 
 	counter := 0
@@ -69,7 +68,6 @@ func TestEnumerateSubdomains_Recursively(t *testing.T) {
 	options := &EnumerationOptions{
 		Sources:   []Source{&FakeSource1{}, &FakeSource2{}},
 		Context:   ctx,
-		Cancel:    cancel,
 		Recursive: true,
 	}
 
@@ -100,7 +98,6 @@ func ExampleEnumerateSubdomains() {
 	options := &EnumerationOptions{
 		Sources: sources,
 		Context: ctx,
-		Cancel:  cancel,
 	}
 
 	counter := 0
