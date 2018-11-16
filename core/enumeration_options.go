@@ -10,6 +10,7 @@ type EnumerationOptions struct {
 	Context   context.Context
 	Cancel    context.CancelFunc
 	Recursive bool
+	Debug     bool
 }
 
 // HasSources checks if the EnumerationOptions have any source defined.
