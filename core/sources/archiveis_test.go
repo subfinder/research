@@ -13,7 +13,7 @@ func TestArchiveIs(t *testing.T) {
 	domain := "apple.com"
 	source := ArchiveIs{}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// stop after 20
@@ -21,17 +21,18 @@ func TestArchiveIs(t *testing.T) {
 
 	for result := range source.ProcessDomain(ctx, domain) {
 		counter++
-		if counter == 20 {
-			cancel()
-		}
-		t.Log(result.Success)
+		//if counter == 20 {
+		//	cancel()
+		//}
+		fmt.Println(result.Success)
+		//t.Log(result.Success)
 	}
 
-	t.Logf("found '%v' results", counter)
+	fmt.Printf("found '%v' results\n", counter)
 }
 
 func TestArchiveIsRecursive(t *testing.T) {
-	domain := "google.com"
+	domain := "apple.com"
 	source := &ArchiveIs{}
 	results := []*core.Result{}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -40,7 +41,6 @@ func TestArchiveIsRecursive(t *testing.T) {
 	options := &core.EnumerationOptions{
 		Recursive: true,
 		Context:   ctx,
-		Cancel:    cancel,
 		Sources:   []core.Source{source},
 	}
 
@@ -55,7 +55,7 @@ func TestArchiveIsRecursive(t *testing.T) {
 		t.Error(ctx.Err())
 	}
 
-	fmt.Println(len(results))
+	fmt.Println(len(results), ctx.Err())
 }
 
 // TODO: fix tests to add the new context version of the API

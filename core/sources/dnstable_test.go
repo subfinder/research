@@ -36,7 +36,6 @@ func TestDNSTableRecursive(t *testing.T) {
 	options := &core.EnumerationOptions{
 		Recursive: true,
 		Context:   ctx,
-		Cancel:    cancel,
 		Sources:   []core.Source{source},
 	}
 
