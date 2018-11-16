@@ -78,6 +78,8 @@ func main() {
 				ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cmdEnumerateTimeoutOpt)*time.Second)
 				defer cancel()
 
+				defer close(results)
+
 				opts := &core.EnumerationOptions{
 					Sources:   sourcesList,
 					Recursive: cmdEnumerateRecursiveOpt,
@@ -94,7 +96,6 @@ func main() {
 							case results <- result:
 								continue
 							}
-							results <- result
 						}
 					}(domain)
 				}
