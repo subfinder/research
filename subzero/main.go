@@ -44,8 +44,11 @@ func main() {
 		cmdEnumerateLimitOpt     int
 		cmdEnumerateRecursiveOpt bool
 		cmdEnumerateUniqOpt      bool
+		cmdEnumerateLabelOpt     bool
+		cmdEnumerateTimeoutOpt   int64
 	)
 
+	// default
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -77,6 +80,11 @@ func main() {
 				sourcesList = append(sourcesList, &sources.PTRArchiveDotCom{})
 				sourcesList = append(sourcesList, &sources.DogPile{})
 			}
+
+			if cmdEnumerateTimeoutOpt != 30 {
+				ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
+				defer cancel()
+			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, domain := range args {
@@ -106,10 +114,12 @@ func main() {
 		},
 	}
 	cmdEnumerate.Flags().IntVar(&cmdEnumerateLimitOpt, "limit", 0, "limit the reported results to the given number")
+	cmdEnumerate.Flags().Int64Var(&cmdEnumerateTimeoutOpt, "timeout", 30, "number of seconds until timeout")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateVerboseOpt, "verbose", false, "show errors and other available diagnostic information")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateInsecureOpt, "insecure", false, "use potentially insecure sources using http")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateUniqOpt, "uniq", false, "filter uniq results from sources")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateRecursiveOpt, "recursive", false, "use results to find more results")
+	cmdEnumerate.Flags().BoolVar(&cmdEnumerateLabelOpt, "labels", false, "show source of the domain in output")
 
 	var rootCmd = &cobra.Command{Use: "subzero"}
 	rootCmd.AddCommand(cmdEnumerate)
