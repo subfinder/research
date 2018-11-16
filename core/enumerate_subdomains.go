@@ -29,8 +29,6 @@ func EnumerateSubdomains(domain string, options *EnumerationOptions) <-chan *Res
 		// a wait group to ensure all child go funcs finish processing
 		wg := sync.WaitGroup{}
 
-		defer options.Cancel()
-
 		// iterate over each source provided in the EnumerationOptions
 		for _, source := range options.Sources {
 
