@@ -71,7 +71,7 @@ func main() {
 
 	var cmdEnumerate = &cobra.Command{
 		Use:   "enumerate [domains to enumerate]",
-		Short: "Enumerate subdomains for the given domains.",
+		Short: "Enumerate subdomains for the given domains",
 		Args:  cobra.MinimumNArgs(1),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			if cmdEnumerateInsecureOpt {
