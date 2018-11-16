@@ -48,12 +48,8 @@ func main() {
 		cmdEnumerateTimeoutOpt   int64
 	)
 
-	// default
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
 	cleanup := func() {
-		cancel()
+		//cancel()
 		os.Exit(0)
 	}
 
@@ -65,12 +61,6 @@ func main() {
 		}
 	}()
 
-	opts := &core.EnumerationOptions{
-		Sources:   sourcesList,
-		Recursive: cmdEnumerateRecursiveOpt,
-		Uniq:      cmdEnumerateUniqOpt,
-	}
-
 	var cmdEnumerate = &cobra.Command{
 		Use:   "enumerate [domains to enumerate]",
 		Short: "Enumerate subdomains for the given domains.",
@@ -80,24 +70,35 @@ func main() {
 				sourcesList = append(sourcesList, &sources.PTRArchiveDotCom{})
 				sourcesList = append(sourcesList, &sources.DogPile{})
 			}
-
-			if cmdEnumerateTimeoutOpt != 30 {
-				ctx, cancel = context.WithTimeout(context.Background(), time.Duration(cmdEnumerateTimeoutOpt)*time.Second)
-				defer cancel()
-			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			opts := &core.EnumerationOptions{
+				Sources:   sourcesList,
+				Recursive: cmdEnumerateRecursiveOpt,
+				Uniq:      cmdEnumerateUniqOpt,
+			}
+
 			jobs.Add(len(args))
 			go func() {
-				defer close(results)
+				ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cmdEnumerateTimeoutOpt)*time.Second)
+				defer cancel()
+
 				for _, domain := range args {
 					go func(domain string) {
 						defer jobs.Done()
 						for result := range core.EnumerateSubdomains(ctx, domain, opts) {
+							select {
+							case <-ctx.Done():
+
+							case results <- result:
+
+							}
 							results <- result
 						}
 					}(domain)
 				}
+
+				jobs.Wait()
 			}()
 		},
 		PostRun: func(cmd *cobra.Command, args []string) {
@@ -128,5 +129,5 @@ func main() {
 	rootCmd.AddCommand(cmdEnumerate)
 	rootCmd.Execute()
 
-	jobs.Wait()
+	//jobs.Wait()
 }
