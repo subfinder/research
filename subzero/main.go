@@ -87,15 +87,18 @@ func main() {
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			for _, domain := range args {
-				jobs.Add(1)
-				go func(domain string) {
-					defer jobs.Done()
-					for result := range core.EnumerateSubdomains(ctx, domain, opts) {
-						results <- result
-					}
-				}(domain)
-			}
+			jobs.Add(len(args))
+			go func() {
+				defer close(results)
+				for _, domain := range args {
+					go func(domain string) {
+						defer jobs.Done()
+						for result := range core.EnumerateSubdomains(ctx, domain, opts) {
+							results <- result
+						}
+					}(domain)
+				}
+			}()
 		},
 		PostRun: func(cmd *cobra.Command, args []string) {
 			var count = 0
