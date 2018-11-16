@@ -10,6 +10,7 @@ type EnumerationOptions struct {
 	Context   context.Context
 	Recursive bool
 	Debug     bool
+	Uniq      bool
 }
 
 // HasSources checks if the EnumerationOptions have any source defined.
