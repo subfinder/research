@@ -146,6 +146,4 @@ func main() {
 	var rootCmd = &cobra.Command{Use: "subzero"}
 	rootCmd.AddCommand(cmdEnumerate)
 	rootCmd.Execute()
-
-	//jobs.Wait()
 }
