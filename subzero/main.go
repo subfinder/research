@@ -62,7 +62,6 @@ func main() {
 
 	opts := &core.EnumerationOptions{
 		Sources: sourcesList,
-		Context: ctx,
 	}
 
 	var cmdEnumerate = &cobra.Command{
@@ -80,7 +79,7 @@ func main() {
 				jobs.Add(1)
 				go func(domain string) {
 					defer jobs.Done()
-					for result := range core.EnumerateSubdomains(domain, opts) {
+					for result := range core.EnumerateSubdomains(ctx, domain, opts) {
 						results <- result
 					}
 				}(domain)
