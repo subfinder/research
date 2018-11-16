@@ -45,7 +45,29 @@ func TestBingRecursive(t *testing.T) {
 	for result := range core.EnumerateSubdomains(ctx, domain, options) {
 		results = append(results, result)
 		fmt.Println(result)
+	}
 
+	if !(len(results) >= 5) {
+		t.Errorf("expected more than 5 result(s), got '%v'", len(results))
+		t.Error(ctx.Err())
+	}
+}
+
+func TestBingRecursive_Uniq(t *testing.T) {
+	domain := "google.com"
+	source := &Bing{}
+	results := []*core.Result{}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	options := &core.EnumerationOptions{
+		Recursive: true,
+		Sources:   []core.Source{source},
+	}
+
+	for result := range core.UniqResults(core.EnumerateSubdomains(ctx, domain, options)) {
+		results = append(results, result)
+		fmt.Println(result)
 	}
 
 	if !(len(results) >= 5) {
