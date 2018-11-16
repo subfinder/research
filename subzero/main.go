@@ -44,7 +44,7 @@ func main() {
 		cmdEnumerateLimitOpt     int
 		cmdEnumerateRecursiveOpt bool
 		cmdEnumerateUniqOpt      bool
-		cmdEnumerateLabelOpt     bool
+		cmdEnumerateLabelsOpt    bool
 		cmdEnumerateTimeoutOpt   int64
 	)
 
@@ -108,7 +108,11 @@ func main() {
 			for result := range results {
 				if result.IsSuccess() {
 					count++
-					fmt.Println(result.Type, result.Success)
+					if cmdEnumerateLabelsOpt {
+						fmt.Println(result.Type, result.Success)
+					} else {
+						fmt.Println(result.Success)
+					}
 				} else if cmdEnumerateVerboseOpt {
 					count++
 					fmt.Println(result.Type, result.Failure)
@@ -125,7 +129,7 @@ func main() {
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateInsecureOpt, "insecure", false, "use potentially insecure sources using http")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateUniqOpt, "uniq", false, "filter uniq results from sources")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateRecursiveOpt, "recursive", false, "use results to find more results")
-	cmdEnumerate.Flags().BoolVar(&cmdEnumerateLabelOpt, "labels", false, "show source of the domain in output")
+	cmdEnumerate.Flags().BoolVar(&cmdEnumerateLabelsOpt, "labels", false, "show source of the domain in output")
 
 	var rootCmd = &cobra.Command{Use: "subzero"}
 	rootCmd.AddCommand(cmdEnumerate)
