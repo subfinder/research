@@ -90,6 +90,11 @@ func EnumerateSubdomains(ctx context.Context, domain string, options *Enumeratio
 		}
 		wg.Wait()
 	}()
+
+	if options.Uniq {
+		return UniqResults(results)
+	}
+
 	// this function returns the combined results channel right away
 	return results
 }

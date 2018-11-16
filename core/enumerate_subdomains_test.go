@@ -91,6 +91,7 @@ func TestEnumerateSubdomains_Recursively_UniqResults(t *testing.T) {
 	options := &EnumerationOptions{
 		Sources:   []Source{&FakeSource1{}, &FakeSource2{}},
 		Recursive: true,
+		Uniq:      true,
 	}
 
 	counter := 0
