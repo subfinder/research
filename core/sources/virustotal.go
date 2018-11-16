@@ -92,7 +92,7 @@ func (source *Virustotal) ProcessDomain(ctx context.Context, domain string) <-ch
 				return
 			}
 		} else {
-			hostResponse := securitytrailsObject{}
+			hostResponse := virustotalapiObject{}
 
 			err = json.NewDecoder(resp.Body).Decode(&hostResponse)
 			if err != nil {
