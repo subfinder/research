@@ -28,9 +28,11 @@ func (source *Bing) ProcessDomain(ctx context.Context, domain string) <-chan *co
 			return
 		}
 
-		uniqFilter := map[string]bool{}
-
 		for currentPage := 1; currentPage <= 750; currentPage += 10 {
+			if ctx.Err() != nil {
+				return
+			}
+
 			url := "https://www.bing.com/search?q=domain%3A" + domain + "&go=Submit&first=" + strconv.Itoa(currentPage)
 			req, err := http.NewRequest(http.MethodGet, url, nil)
 			if err != nil {
@@ -55,20 +57,18 @@ func (source *Bing) ProcessDomain(ctx context.Context, domain string) <-chan *co
 			scanner := bufio.NewScanner(resp.Body)
 
 			for scanner.Scan() {
+				if ctx.Err() != nil {
+					return
+				}
+
 				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-					_, found := uniqFilter[str]
-					if !found {
-						uniqFilter[str] = true
-						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-							resp.Body.Close()
-							return
-						}
+					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+						break
 					}
 				}
 			}
 
 			resp.Body.Close()
-
 		}
 
 	}(domain, results)
