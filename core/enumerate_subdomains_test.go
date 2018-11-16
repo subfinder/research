@@ -82,6 +82,30 @@ func TestEnumerateSubdomains_Recursively(t *testing.T) {
 	t.Log(counter)
 }
 
+func TestEnumerateSubdomains_Recursively_UniqResults(t *testing.T) {
+	domain := "google.com"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	options := &EnumerationOptions{
+		Sources:   []Source{&FakeSource1{}, &FakeSource2{}},
+		Recursive: true,
+	}
+
+	counter := 0
+
+	results := EnumerateSubdomains(ctx, domain, options)
+
+	for result := range UniqResults(results) {
+		counter++
+		fmt.Println(result)
+	}
+
+	fmt.Println(counter, ctx.Err())
+
+}
+
 func ExampleEnumerateSubdomains() {
 	domain := "google.com"
 
