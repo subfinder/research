@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/subfinder/research/core"
+	"golang.org/x/sync/semaphore"
 )
 
 // DogPile is a source to process subdomains from http://dogpile.com
@@ -16,10 +17,15 @@ import (
 //
 // This source uses http instead of https because of problems dogpile's SSL cert.
 //
-type DogPile struct{}
+type DogPile struct {
+	lock *semaphore.Weighted
+}
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *DogPile) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+	if source.lock == nil {
+		source.lock = defaultLockValue()
+	}
 
 	var resultLabel = "dogpile"
 
@@ -27,6 +33,11 @@ func (source *DogPile) ProcessDomain(ctx context.Context, domain string) <-chan 
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
+
+		if err := source.lock.Acquire(ctx, 1); err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
@@ -44,6 +55,7 @@ func (source *DogPile) ProcessDomain(ctx context.Context, domain string) <-chan 
 				return
 			}
 
+			req.Cancel = ctx.Done()
 			req.WithContext(ctx)
 
 			resp, err := core.HTTPClient.Do(req)

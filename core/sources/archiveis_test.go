@@ -13,22 +13,21 @@ func TestArchiveIs(t *testing.T) {
 	domain := "apple.com"
 	source := ArchiveIs{}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// stop after 20
 	counter := 0
 
-	for result := range source.ProcessDomain(ctx, domain) {
+	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
 		counter++
-		//if counter == 20 {
-		//	cancel()
-		//}
+		if counter == 20 {
+			cancel()
+		}
 		fmt.Println(result.Success)
-		//t.Log(result.Success)
 	}
 
-	fmt.Printf("found '%v' results\n", counter)
+	fmt.Println("found", counter, ctx.Err())
 }
 
 func TestArchiveIsRecursive(t *testing.T) {
@@ -43,15 +42,9 @@ func TestArchiveIsRecursive(t *testing.T) {
 		Sources:   []core.Source{source},
 	}
 
-	for result := range core.EnumerateSubdomains(ctx, domain, options) {
+	for result := range core.UniqResults(core.EnumerateSubdomains(ctx, domain, options)) {
 		results = append(results, result)
 		fmt.Println(result)
-
-	}
-
-	if !(len(results) >= 5) {
-		t.Errorf("expected more than 5 result(s), got '%v'", len(results))
-		t.Error(ctx.Err())
 	}
 
 	fmt.Println(len(results), ctx.Err())

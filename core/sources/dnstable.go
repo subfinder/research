@@ -7,18 +7,30 @@ import (
 	"net/http"
 
 	"github.com/subfinder/research/core"
+	"golang.org/x/sync/semaphore"
 )
 
 // DNSTable is a source to process subdomains from https://dnstable.com
-type DNSTable struct{}
+type DNSTable struct {
+	lock *semaphore.Weighted
+}
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *DNSTable) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+	if source.lock == nil {
+		source.lock = defaultLockValue()
+	}
+
 	var resultLabel = "dnstable"
 
 	results := make(chan *core.Result)
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
+
+		if err := source.lock.Acquire(ctx, 1); err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
@@ -34,6 +46,7 @@ func (source *DNSTable) ProcessDomain(ctx context.Context, domain string) <-chan
 			return
 		}
 
+		req.Cancel = ctx.Done()
 		req.WithContext(ctx)
 
 		resp, err := core.HTTPClient.Do(req)
@@ -63,6 +76,13 @@ func (source *DNSTable) ProcessDomain(ctx context.Context, domain string) <-chan
 					}
 				}
 			}
+		}
+
+		err = scanner.Err()
+
+		if err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
 		}
 
 	}(domain, results)

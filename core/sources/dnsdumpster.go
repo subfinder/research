@@ -14,13 +14,15 @@ import (
 	"time"
 
 	"github.com/subfinder/research/core"
+	"golang.org/x/sync/semaphore"
 )
 
 // DNSDumpster is a source to process subdomains from https://dnsdumpster.com
-type DNSDumpster struct{}
+type DNSDumpster struct {
+	lock *semaphore.Weighted
+}
 
 func getHTTPCookieResponse(urls string, cookies []*http.Cookie, timeout int) (resp *http.Response, cookie []*http.Cookie, err error) {
-
 	var curCookieJar *cookiejar.Jar
 
 	curCookieJar, _ = cookiejar.New(nil)
@@ -60,6 +62,9 @@ func getHTTPCookieResponse(urls string, cookies []*http.Cookie, timeout int) (re
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *DNSDumpster) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+	if source.lock == nil {
+		source.lock = defaultLockValue()
+	}
 
 	var resultLabel = "dnsdumpster"
 
@@ -67,6 +72,11 @@ func (source *DNSDumpster) ProcessDomain(ctx context.Context, domain string) <-c
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
+
+		if err := source.lock.Acquire(ctx, 1); err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
@@ -119,6 +129,7 @@ func (source *DNSDumpster) ProcessDomain(ctx context.Context, domain string) <-c
 		req.Header.Add("Referer", "https://dnsdumpster.com")
 		req.Header.Set("User-Agent", "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1")
 
+		req.Cancel = ctx.Done()
 		req.WithContext(ctx)
 
 		core.HTTPClient.Jar = curCookieJar
@@ -143,6 +154,13 @@ func (source *DNSDumpster) ProcessDomain(ctx context.Context, domain string) <-c
 					return
 				}
 			}
+		}
+
+		err = scanner.Err()
+
+		if err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
 		}
 
 		return

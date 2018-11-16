@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/subfinder/research/core"
+	"golang.org/x/sync/semaphore"
 )
 
 // Riddler is a source to process subdomains from https://riddler.io
@@ -17,6 +18,7 @@ type Riddler struct {
 	Email    string
 	Password string
 	APIToken string
+	lock     *semaphore.Weighted
 }
 
 type riddlerHost struct {
@@ -43,6 +45,7 @@ func (source *Riddler) Authenticate(ctx context.Context) (bool, error) {
 
 	req.Header.Add("Content-Type", "application/json")
 
+	req.Cancel = ctx.Done()
 	req.WithContext(ctx)
 
 	resp, err := core.HTTPClient.Do(req)
@@ -69,6 +72,9 @@ func (source *Riddler) Authenticate(ctx context.Context) (bool, error) {
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *Riddler) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+	if source.lock == nil {
+		source.lock = defaultLockValue()
+	}
 
 	var resultLabel = "riddler"
 
@@ -76,6 +82,11 @@ func (source *Riddler) ProcessDomain(ctx context.Context, domain string) <-chan 
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
+
+		if err := source.lock.Acquire(ctx, 1); err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
 
 		// check if only email was given
 		if source.Email != "" && source.Password == "" {
@@ -177,6 +188,14 @@ func (source *Riddler) ProcessDomain(ctx context.Context, domain string) <-chan 
 					}
 				}
 			}
+
+			err = scanner.Err()
+
+			if err != nil {
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				return
+			}
+
 			return
 		}
 

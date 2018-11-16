@@ -7,11 +7,13 @@ import (
 	"net/http"
 
 	"github.com/subfinder/research/core"
+	"golang.org/x/sync/semaphore"
 )
 
 // SecurityTrails is a source to process subdomains from https://securitytrails.com
 type SecurityTrails struct {
 	APIToken string
+	lock     *semaphore.Weighted
 }
 
 type securitytrailsObject struct {
@@ -20,6 +22,9 @@ type securitytrailsObject struct {
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *SecurityTrails) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+	if source.lock == nil {
+		source.lock = defaultLockValue()
+	}
 
 	var resultLabel = "riddler"
 
@@ -27,6 +32,11 @@ func (source *SecurityTrails) ProcessDomain(ctx context.Context, domain string) 
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
+
+		if err := source.lock.Acquire(ctx, 1); err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
 
 		// check if only password was given
 		if source.APIToken == "" {
@@ -43,6 +53,7 @@ func (source *SecurityTrails) ProcessDomain(ctx context.Context, domain string) 
 
 		req.Header.Add("APIKEY", source.APIToken)
 
+		req.Cancel = ctx.Done()
 		req.WithContext(ctx)
 
 		resp, err := core.HTTPClient.Do(req)

@@ -9,10 +9,13 @@ import (
 	"net/http"
 
 	"github.com/subfinder/research/core"
+	"golang.org/x/sync/semaphore"
 )
 
 // CrtSh is a source to process subdomains from https://crt.sh
-type CrtSh struct{}
+type CrtSh struct {
+	lock *semaphore.Weighted
+}
 
 type crtshObject struct {
 	NameValue string `json:"name_value"`
@@ -20,6 +23,9 @@ type crtshObject struct {
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *CrtSh) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+	if source.lock == nil {
+		source.lock = defaultLockValue()
+	}
 
 	var resultLabel = "crtsh"
 
@@ -27,6 +33,11 @@ func (source *CrtSh) ProcessDomain(ctx context.Context, domain string) <-chan *c
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
+
+		if err := source.lock.Acquire(ctx, 1); err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
@@ -42,6 +53,7 @@ func (source *CrtSh) ProcessDomain(ctx context.Context, domain string) <-chan *c
 			return
 		}
 
+		req.Cancel = ctx.Done()
 		req.WithContext(ctx)
 
 		resp, err := core.HTTPClient.Do(req)
@@ -93,6 +105,13 @@ func (source *CrtSh) ProcessDomain(ctx context.Context, domain string) <-chan *c
 				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 				return
 			}
+		}
+
+		err = scanner.Err()
+
+		if err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
 		}
 	}(domain, results)
 	return results

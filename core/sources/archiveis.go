@@ -7,14 +7,21 @@ import (
 	"net/http"
 	"strconv"
 
+	"golang.org/x/sync/semaphore"
+
 	"github.com/subfinder/research/core"
 )
 
 // ArchiveIs is a source to process subdomains from http://archive.is
-type ArchiveIs struct{}
+type ArchiveIs struct {
+	lock *semaphore.Weighted
+}
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *ArchiveIs) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+	if source.lock == nil {
+		source.lock = defaultLockValue()
+	}
 
 	var resultLabel = "archiveis"
 
@@ -23,13 +30,16 @@ func (source *ArchiveIs) ProcessDomain(ctx context.Context, domain string) <-cha
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
+		if err := source.lock.Acquire(ctx, 1); err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
+
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
-
-		uniqFilter := map[string]bool{}
 
 		for currentPage := 0; currentPage <= 750; currentPage += 10 {
 			if ctx.Err() != nil {
@@ -44,6 +54,7 @@ func (source *ArchiveIs) ProcessDomain(ctx context.Context, domain string) <-cha
 				return
 			}
 
+			req.Cancel = ctx.Done()
 			req.WithContext(ctx)
 
 			resp, err := core.HTTPClient.Do(req)
@@ -70,18 +81,21 @@ func (source *ArchiveIs) ProcessDomain(ctx context.Context, domain string) <-cha
 					if ctx.Err() != nil {
 						return
 					}
-					_, found := uniqFilter[str]
-					if !found {
-						uniqFilter[str] = true
-						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-							resp.Body.Close()
-							return
-						}
+					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+						resp.Body.Close()
+						return
 					}
 				}
 			}
 
 			resp.Body.Close()
+
+			err = scanner.Err()
+
+			if err != nil {
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				return
+			}
 		}
 
 	}(domain, results)

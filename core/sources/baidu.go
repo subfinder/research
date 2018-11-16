@@ -8,13 +8,19 @@ import (
 	"strconv"
 
 	"github.com/subfinder/research/core"
+	"golang.org/x/sync/semaphore"
 )
 
 // Baidu is a source to process subdomains from https://baidu.com
-type Baidu struct{}
+type Baidu struct {
+	lock *semaphore.Weighted
+}
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *Baidu) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+	if source.lock == nil {
+		source.lock = defaultLockValue()
+	}
 
 	var resultLabel = "baidu"
 
@@ -22,6 +28,11 @@ func (source *Baidu) ProcessDomain(ctx context.Context, domain string) <-chan *c
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
+
+		if err := source.lock.Acquire(ctx, 1); err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
@@ -37,6 +48,7 @@ func (source *Baidu) ProcessDomain(ctx context.Context, domain string) <-chan *c
 				return
 			}
 
+			req.Cancel = ctx.Done()
 			req.WithContext(ctx)
 
 			resp, err := core.HTTPClient.Do(req)
@@ -70,6 +82,12 @@ func (source *Baidu) ProcessDomain(ctx context.Context, domain string) <-chan *c
 
 			resp.Body.Close()
 
+			err = scanner.Err()
+
+			if err != nil {
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				return
+			}
 		}
 
 	}(domain, results)

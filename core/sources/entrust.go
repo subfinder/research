@@ -8,13 +8,19 @@ import (
 	"strings"
 
 	"github.com/subfinder/research/core"
+	"golang.org/x/sync/semaphore"
 )
 
 // Entrust is a source to process subdomains from https://entrust.com
-type Entrust struct{}
+type Entrust struct {
+	lock *semaphore.Weighted
+}
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *Entrust) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+	if source.lock == nil {
+		source.lock = defaultLockValue()
+	}
 
 	var resultLabel = "entrust"
 
@@ -22,6 +28,11 @@ func (source *Entrust) ProcessDomain(ctx context.Context, domain string) <-chan 
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
+
+		if err := source.lock.Acquire(ctx, 1); err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
@@ -37,6 +48,7 @@ func (source *Entrust) ProcessDomain(ctx context.Context, domain string) <-chan 
 			return
 		}
 
+		req.Cancel = ctx.Done()
 		req.WithContext(ctx)
 
 		resp, err := core.HTTPClient.Do(req)

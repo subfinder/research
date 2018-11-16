@@ -9,26 +9,36 @@ import (
 	"strings"
 
 	"github.com/subfinder/research/core"
+	"golang.org/x/sync/semaphore"
 )
 
 // Ask is a source to process subdomains from https://ask.com
-type Ask struct{}
+type Ask struct {
+	lock *semaphore.Weighted
+}
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *Ask) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+	if source.lock == nil {
+		source.lock = defaultLockValue()
+	}
+
 	var resultLabel = "ask"
 
 	results := make(chan *core.Result)
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
+		if err := source.lock.Acquire(ctx, 1); err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
+
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
-
-		uniqFilter := map[string]bool{}
 
 		for currentPage := 1; currentPage <= 750; currentPage++ {
 			url := "https://www.ask.com/web?q=site%3A" + domain + "+-www.+&page=" + strconv.Itoa(currentPage) + "&o=0&l=dir&qsrc=998&qo=pagination"
@@ -38,6 +48,7 @@ func (source *Ask) ProcessDomain(ctx context.Context, domain string) <-chan *cor
 				return
 			}
 
+			req.Cancel = ctx.Done()
 			req.WithContext(ctx)
 
 			resp, err := core.HTTPClient.Do(req)
@@ -67,13 +78,9 @@ func (source *Ask) ProcessDomain(ctx context.Context, domain string) <-chan *cor
 					return
 				}
 				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-					_, found := uniqFilter[str]
-					if !found {
-						uniqFilter[str] = true
-						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-							resp.Body.Close()
-							return
-						}
+					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+						resp.Body.Close()
+						return
 					}
 				}
 			}

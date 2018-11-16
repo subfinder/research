@@ -10,15 +10,21 @@ import (
 	"sync"
 
 	"github.com/subfinder/research/core"
+	"golang.org/x/sync/semaphore"
 )
 
 // CertSpotter is a source to process subdomains from https://certspotter.com
 type CertSpotter struct {
 	APIToken string
+	lock     *semaphore.Weighted
 }
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
 func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-chan *core.Result {
+	if source.lock == nil {
+		source.lock = defaultLockValue()
+	}
+
 	var resultLabel = "certspotter"
 
 	wg := sync.WaitGroup{}
@@ -30,6 +36,11 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 	// apiv0
 	go func(domain string, results chan *core.Result) {
 		defer wg.Done()
+
+		if err := source.lock.Acquire(ctx, 1); err != nil {
+			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			return
+		}
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
@@ -46,6 +57,7 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 			return
 		}
 
+		req.Cancel = ctx.Done()
 		req.WithContext(ctx)
 
 		resp, err := core.HTTPClient.Do(req)
