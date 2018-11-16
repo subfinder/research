@@ -92,10 +92,11 @@ func main() {
 		PostRun: func(cmd *cobra.Command, args []string) {
 			var count = 0
 			for result := range results {
-				count++
 				if result.IsSuccess() {
+					count++
 					fmt.Println(result.Type, result.Success)
 				} else if cmdEnumerateVerboseOpt {
+					count++
 					fmt.Println(result.Type, result.Failure)
 				}
 				if cmdEnumerateLimitOpt != 0 && cmdEnumerateLimitOpt == count {
