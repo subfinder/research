@@ -108,7 +108,7 @@ func main() {
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateVerboseOpt, "verbose", false, "show errors and other available diagnostic information")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateInsecureOpt, "insecure", false, "use potentially insecure sources using http")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateUniqOpt, "uniq", false, "filter uniq results from sources")
-	cmdEnumerate.Flags().BoolVar(&cmdEnumerateRecursiveOpt, "uniq", false, "use results to find more results")
+	cmdEnumerate.Flags().BoolVar(&cmdEnumerateRecursiveOpt, "recursive", false, "use results to find more results")
 
 	var rootCmd = &cobra.Command{Use: "subzero"}
 	rootCmd.AddCommand(cmdEnumerate)
