@@ -29,6 +29,7 @@ var sourcesList = []core.Source{
 	&sources.Entrust{},
 	&sources.FindSubdomainsDotCom{},
 	&sources.HackerTarget{},
+	&sources.Passivetotal{},
 	&sources.PTRArchiveDotCom{},
 	&sources.Riddler{},
 	&sources.SecurityTrails{},
