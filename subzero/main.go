@@ -39,9 +39,11 @@ func main() {
 
 	// enumerate command options
 	var (
-		cmdEnumerateVerboseOpt  bool
-		cmdEnumerateInsecureOpt bool
-		cmdEnumerateLimitOpt    int
+		cmdEnumerateVerboseOpt   bool
+		cmdEnumerateInsecureOpt  bool
+		cmdEnumerateLimitOpt     int
+		cmdEnumerateRecursiveOpt int
+		cmdEnumerateUniqOpt      int
 	)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -61,7 +63,9 @@ func main() {
 	}()
 
 	opts := &core.EnumerationOptions{
-		Sources: sourcesList,
+		Sources:   sourcesList,
+		Recursive: cmdEnumerateRecursiveOpt,
+		Uniq:      cmdEnumerateUniqOpt,
 	}
 
 	var cmdEnumerate = &cobra.Command{
