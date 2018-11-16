@@ -46,6 +46,7 @@ func main() {
 		cmdEnumerateUniqOpt      bool
 		cmdEnumerateLabelsOpt    bool
 		cmdEnumerateTimeoutOpt   int64
+		cmdEnumerateNoTimeoutOpt bool
 	)
 
 	cleanup := func() {
@@ -75,8 +76,18 @@ func main() {
 			jobs.Add(len(args))
 			go func() {
 
-				ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cmdEnumerateTimeoutOpt)*time.Second)
-				defer cancel()
+				var (
+					ctx    context.Context
+					cancel context.CancelFunc
+				)
+
+				if cmdEnumerateNoTimeoutOpt {
+					ctx, cancel = context.WithCancel(context.Background())
+					defer cancel()
+				} else {
+					ctx, cancel = context.WithTimeout(context.Background(), time.Duration(cmdEnumerateTimeoutOpt)*time.Second)
+					defer cancel()
+				}
 
 				defer close(results)
 
@@ -125,6 +136,7 @@ func main() {
 	}
 	cmdEnumerate.Flags().IntVar(&cmdEnumerateLimitOpt, "limit", 0, "limit the reported results to the given number")
 	cmdEnumerate.Flags().Int64Var(&cmdEnumerateTimeoutOpt, "timeout", 30, "number of seconds until timeout")
+	cmdEnumerate.Flags().BoolVar(&cmdEnumerateNoTimeoutOpt, "no-timeout", false, "do not timeout")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateVerboseOpt, "verbose", false, "show errors and other available diagnostic information")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateInsecureOpt, "insecure", false, "use potentially insecure sources using http")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateUniqOpt, "uniq", false, "filter uniq results from sources")
