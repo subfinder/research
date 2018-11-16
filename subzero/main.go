@@ -42,8 +42,8 @@ func main() {
 		cmdEnumerateVerboseOpt   bool
 		cmdEnumerateInsecureOpt  bool
 		cmdEnumerateLimitOpt     int
-		cmdEnumerateRecursiveOpt int
-		cmdEnumerateUniqOpt      int
+		cmdEnumerateRecursiveOpt bool
+		cmdEnumerateUniqOpt      bool
 	)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
