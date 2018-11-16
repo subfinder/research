@@ -72,16 +72,17 @@ func main() {
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			opts := &core.EnumerationOptions{
-				Sources:   sourcesList,
-				Recursive: cmdEnumerateRecursiveOpt,
-				Uniq:      cmdEnumerateUniqOpt,
-			}
-
 			jobs.Add(len(args))
 			go func() {
+
 				ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cmdEnumerateTimeoutOpt)*time.Second)
 				defer cancel()
+
+				opts := &core.EnumerationOptions{
+					Sources:   sourcesList,
+					Recursive: cmdEnumerateRecursiveOpt,
+					Uniq:      cmdEnumerateUniqOpt,
+				}
 
 				for _, domain := range args {
 					go func(domain string) {
@@ -89,9 +90,9 @@ func main() {
 						for result := range core.EnumerateSubdomains(ctx, domain, opts) {
 							select {
 							case <-ctx.Done():
-
+								cleanup()
 							case results <- result:
-
+								continue
 							}
 							results <- result
 						}
