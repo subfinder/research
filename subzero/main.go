@@ -145,8 +145,8 @@ func main() {
 	cmdEnumerate.Flags().Int64Var(&cmdEnumerateTimeoutOpt, "timeout", 30, "number of seconds until timeout")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateNoTimeoutOpt, "no-timeout", false, "do not timeout")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateVerboseOpt, "verbose", false, "show errors and other available diagnostic information")
-	cmdEnumerate.Flags().BoolVar(&cmdEnumerateInsecureOpt, "insecure", false, "use potentially insecure sources using http")
-	cmdEnumerate.Flags().BoolVar(&cmdEnumerateUniqOpt, "uniq", false, "filter uniq results from sources")
+	cmdEnumerate.Flags().BoolVar(&cmdEnumerateInsecureOpt, "insecure", false, "include potentially insecure sources using http")
+	cmdEnumerate.Flags().BoolVar(&cmdEnumerateUniqOpt, "uniq", false, "filter uniq results")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateRecursiveOpt, "recursive", false, "use results to find more results")
 	cmdEnumerate.Flags().BoolVar(&cmdEnumerateLabelsOpt, "labels", false, "show source of the domain in output")
 
