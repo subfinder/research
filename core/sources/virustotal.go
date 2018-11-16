@@ -3,6 +3,7 @@ package sources
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -12,7 +13,12 @@ import (
 
 // Virustotal is a source to process subdomains from https://Virustotal.com
 type Virustotal struct {
-	lock *semaphore.Weighted
+	APIToken string
+	lock     *semaphore.Weighted
+}
+
+type virustotalapiObject struct {
+	Subdomains []string `json:"subdomains"`
 }
 
 // ProcessDomain takes a given base domain and attempts to enumerate subdomains.
@@ -38,9 +44,14 @@ func (source *Virustotal) ProcessDomain(ctx context.Context, domain string) <-ch
 			return
 		}
 
-		uniqFilter := map[string]bool{}
+		var req *http.Request
 
-		req, err := http.NewRequest(http.MethodGet, "https://www.virustotal.com/en/domain/"+domain+"/information/", nil)
+		if source.APIToken == "" {
+			req, err = http.NewRequest(http.MethodGet, "https://www.virustotal.com/en/domain/"+domain+"/information/", nil)
+		} else {
+			req, err = http.NewRequest(http.MethodGet, "https://www.virustotal.com/vtapi/v2/domain/report?apikey="+source.APIToken+"&domain="+domain, nil)
+		}
+
 		if err != nil {
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
@@ -61,28 +72,40 @@ func (source *Virustotal) ProcessDomain(ctx context.Context, domain string) <-ch
 			return
 		}
 
-		scanner := bufio.NewScanner(resp.Body)
-
-		for scanner.Scan() {
-			if ctx.Err() != nil {
-				return
-			}
-			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				_, found := uniqFilter[str]
-				if !found {
-					uniqFilter[str] = true
+		if source.APIToken == "" {
+			scanner := bufio.NewScanner(resp.Body)
+			for scanner.Scan() {
+				if ctx.Err() != nil {
+					return
+				}
+				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
 					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
 						return
 					}
 				}
 			}
-		}
 
-		err = scanner.Err()
+			err = scanner.Err()
 
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
+			if err != nil {
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				return
+			}
+		} else {
+			hostResponse := securitytrailsObject{}
+
+			err = json.NewDecoder(resp.Body).Decode(&hostResponse)
+			if err != nil {
+				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				return
+			}
+
+			for _, sub := range hostResponse.Subdomains {
+				str := sub + "." + domain
+				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+					return
+				}
+			}
 		}
 
 	}(domain, results)

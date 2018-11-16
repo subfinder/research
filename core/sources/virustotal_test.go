@@ -3,6 +3,7 @@ package sources
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -12,6 +13,23 @@ import (
 func TestVirustotal(t *testing.T) {
 	domain := "bing.com"
 	source := Virustotal{}
+	results := []*core.Result{}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	for result := range source.ProcessDomain(ctx, domain) {
+		fmt.Println(result)
+		results = append(results, result)
+	}
+
+	if !(len(results) >= 100) {
+		t.Errorf("expected more than 100 result(s), got '%v'", len(results))
+	}
+}
+
+func TestVirustotal_APIToken(t *testing.T) {
+	domain := "bing.com"
+	source := Virustotal{APIToken: os.Getenv("VirustotalKey")}
 	results := []*core.Result{}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
