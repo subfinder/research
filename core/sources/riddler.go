@@ -87,6 +87,7 @@ func (source *Riddler) ProcessDomain(ctx context.Context, domain string) <-chan 
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
+		defer source.lock.Release(1)
 
 		// check if only email was given
 		if source.Email != "" && source.Password == "" {

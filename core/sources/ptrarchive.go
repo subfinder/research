@@ -32,6 +32,7 @@ func (source *PTRArchiveDotCom) ProcessDomain(ctx context.Context, domain string
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
+		defer source.lock.Release(1)
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {

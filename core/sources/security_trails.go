@@ -37,6 +37,7 @@ func (source *SecurityTrails) ProcessDomain(ctx context.Context, domain string) 
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
+		defer source.lock.Release(1)
 
 		// check if only password was given
 		if source.APIToken == "" {

@@ -33,6 +33,7 @@ func (source *Baidu) ProcessDomain(ctx context.Context, domain string) <-chan *c
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
+		defer source.lock.Release(1)
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {

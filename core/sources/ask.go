@@ -33,6 +33,7 @@ func (source *Ask) ProcessDomain(ctx context.Context, domain string) <-chan *cor
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
+		defer source.lock.Release(1)
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {

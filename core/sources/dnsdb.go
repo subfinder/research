@@ -38,6 +38,7 @@ func (source *DNSDbDotCom) ProcessDomain(ctx context.Context, domain string) <-c
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
+		defer source.lock.Release(1)
 
 		uniqFilter := map[string]bool{}
 

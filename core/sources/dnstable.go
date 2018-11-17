@@ -31,6 +31,7 @@ func (source *DNSTable) ProcessDomain(ctx context.Context, domain string) <-chan
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
+		defer source.lock.Release(1)
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {

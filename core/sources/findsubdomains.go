@@ -31,6 +31,7 @@ func (source *FindSubdomainsDotCom) ProcessDomain(ctx context.Context, domain st
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 			return
 		}
+		defer source.lock.Release(1)
 
 		domainExtractor, err := core.NewSubdomainExtractor(domain)
 		if err != nil {
