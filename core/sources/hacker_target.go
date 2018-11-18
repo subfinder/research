@@ -42,8 +42,6 @@ func (source *HackerTarget) ProcessDomain(ctx context.Context, domain string) <-
 			return
 		}
 
-		uniqFilter := map[string]bool{}
-
 		// get response from the API, optionally with an API key
 		var resp *http.Response
 
@@ -86,12 +84,8 @@ func (source *HackerTarget) ProcessDomain(ctx context.Context, domain string) <-
 				return
 			}
 			for _, str := range domainExtractor.FindAllString(str, -1) {
-				_, found := uniqFilter[str]
-				if !found {
-					uniqFilter[str] = true
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-						return
-					}
+				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+					return
 				}
 			}
 		}
