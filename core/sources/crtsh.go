@@ -46,8 +46,6 @@ func (source *CrtSh) ProcessDomain(ctx context.Context, domain string) <-chan *c
 			return
 		}
 
-		uniqFilter := map[string]bool{}
-
 		req, err := http.NewRequest(http.MethodGet, "https://crt.sh/?q=%25."+domain+"&output=json", nil)
 		if err != nil {
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
@@ -90,12 +88,8 @@ func (source *CrtSh) ProcessDomain(ctx context.Context, domain string) <-chan *c
 				}
 				// This could potentially be made more efficient.
 				for _, str := range domainExtractor.FindAllString(object.NameValue, -1) {
-					_, found := uniqFilter[str]
-					if !found {
-						uniqFilter[str] = true
-						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-							return
-						}
+					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+						return
 					}
 				}
 			}
