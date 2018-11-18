@@ -46,8 +46,6 @@ func (source *DogPile) ProcessDomain(ctx context.Context, domain string) <-chan 
 			return
 		}
 
-		uniqFilter := map[string]bool{}
-
 		for currentPage := 1; currentPage <= 750; currentPage++ {
 			url := "http://www.dogpile.com/search/web?q=" + domain + "&qsi=" + strconv.Itoa(currentPage*15+1)
 			req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -81,13 +79,9 @@ func (source *DogPile) ProcessDomain(ctx context.Context, domain string) <-chan 
 					return
 				}
 				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-					_, found := uniqFilter[str]
-					if !found {
-						uniqFilter[str] = true
-						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-							resp.Body.Close()
-							return
-						}
+					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+						resp.Body.Close()
+						return
 					}
 				}
 			}
