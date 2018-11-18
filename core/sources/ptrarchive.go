@@ -40,8 +40,6 @@ func (source *PTRArchiveDotCom) ProcessDomain(ctx context.Context, domain string
 			return
 		}
 
-		uniqFilter := map[string]bool{}
-
 		req, err := http.NewRequest(http.MethodGet, "https://ptrarchive.com/tools/search3.htm?label="+domain+"&date=ALL", nil)
 		if err != nil {
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
@@ -69,13 +67,10 @@ func (source *PTRArchiveDotCom) ProcessDomain(ctx context.Context, domain string
 			if ctx.Err() != nil {
 				return
 			}
+
 			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				_, found := uniqFilter[str]
-				if !found {
-					uniqFilter[str] = true
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-						return
-					}
+				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+					return
 				}
 			}
 		}
