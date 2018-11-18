@@ -41,8 +41,6 @@ func (source *WaybackArchive) ProcessDomain(ctx context.Context, domain string) 
 			return
 		}
 
-		uniqFilter := map[string]bool{}
-
 		req, err := http.NewRequest(http.MethodGet, "http://web.archive.org/cdx/search/cdx?url=*."+domain+"/*&output=json&fl=original&collapse=urlkey", nil)
 		if err != nil {
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
@@ -78,12 +76,8 @@ func (source *WaybackArchive) ProcessDomain(ctx context.Context, domain string) 
 				str := string(jsonBuffer.Bytes())
 				jsonBuffer.Reset()
 				str = domainExtractor.FindString(str)
-				_, found := uniqFilter[str]
-				if !found && str != "" {
-					uniqFilter[str] = true
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-						return
-					}
+				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+					return
 				}
 			} else {
 				jsonBuffer.Write(scanner.Bytes())
