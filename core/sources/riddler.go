@@ -113,8 +113,6 @@ func (source *Riddler) ProcessDomain(ctx context.Context, domain string) <-chan 
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
 		}
 
-		uniqFilter := map[string]bool{}
-
 		var resp *http.Response
 
 		if source.APIToken != "" {
@@ -150,12 +148,8 @@ func (source *Riddler) ProcessDomain(ctx context.Context, domain string) <-chan 
 
 			for _, r := range hostResponse {
 				for _, str := range domainExtractor.FindAllString(r.Host, -1) {
-					_, found := uniqFilter[str]
-					if !found {
-						uniqFilter[str] = true
-						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-							return
-						}
+					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+						return
 					}
 				}
 			}
@@ -180,12 +174,8 @@ func (source *Riddler) ProcessDomain(ctx context.Context, domain string) <-chan 
 
 			for scanner.Scan() {
 				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-					_, found := uniqFilter[str]
-					if !found {
-						uniqFilter[str] = true
-						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-							return
-						}
+					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+						return
 					}
 				}
 			}
