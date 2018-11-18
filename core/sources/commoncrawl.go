@@ -40,8 +40,6 @@ func (source *CommonCrawlDotOrg) ProcessDomain(ctx context.Context, domain strin
 			return
 		}
 
-		uniqFilter := map[string]bool{}
-
 		req, err := http.NewRequest(http.MethodGet, "https://index.commoncrawl.org/CC-MAIN-2018-17-index?url=*."+domain+"&output=json", nil)
 		if err != nil {
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
@@ -70,12 +68,8 @@ func (source *CommonCrawlDotOrg) ProcessDomain(ctx context.Context, domain strin
 				return
 			}
 			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				_, found := uniqFilter[str]
-				if !found {
-					uniqFilter[str] = true
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-						return
-					}
+				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+					return
 				}
 			}
 		}
