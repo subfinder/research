@@ -39,8 +39,6 @@ func (source *CertDB) ProcessDomain(ctx context.Context, domain string) <-chan *
 			return
 		}
 
-		uniqFilter := map[string]bool{}
-
 		req, err := http.NewRequest(http.MethodGet, "https://certdb.com/domain/"+domain, nil)
 		if err != nil {
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
@@ -69,13 +67,10 @@ func (source *CertDB) ProcessDomain(ctx context.Context, domain string) <-chan *
 				return
 			}
 			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				_, found := uniqFilter[str]
-				if !found {
-					uniqFilter[str] = true
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-						return
-					}
+				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+					return
 				}
+
 			}
 		}
 
