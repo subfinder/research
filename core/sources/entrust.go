@@ -41,8 +41,6 @@ func (source *Entrust) ProcessDomain(ctx context.Context, domain string) <-chan 
 			return
 		}
 
-		uniqFilter := map[string]bool{}
-
 		req, err := http.NewRequest(http.MethodGet, "https://ctsearch.entrust.com/api/v1/certificates?fields=subjectDN&domain="+domain+"&includeExpired=true&exactMatch=false&limit=5000", nil)
 		if err != nil {
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
@@ -72,12 +70,8 @@ func (source *Entrust) ProcessDomain(ctx context.Context, domain string) <-chan 
 			}
 			txt := strings.Replace(scanner.Text(), "u003d", " ", -1)
 			for _, str := range domainExtractor.FindAllString(txt, -1) {
-				_, found := uniqFilter[str]
-				if !found {
-					uniqFilter[str] = true
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-						return
-					}
+				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+					return
 				}
 			}
 		}
