@@ -40,8 +40,6 @@ func (source *ThreatCrowd) ProcessDomain(ctx context.Context, domain string) <-c
 			return
 		}
 
-		uniqFilter := map[string]bool{}
-
 		req, err := http.NewRequest(http.MethodGet, "https://www.threatcrowd.org/searchApi/v2/domain/report/?domain="+domain, nil)
 		if err != nil {
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
@@ -70,12 +68,8 @@ func (source *ThreatCrowd) ProcessDomain(ctx context.Context, domain string) <-c
 				return
 			}
 			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				_, found := uniqFilter[str]
-				if !found {
-					uniqFilter[str] = true
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-						return
-					}
+				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+					return
 				}
 			}
 		}
