@@ -41,8 +41,6 @@ func (source *Yahoo) ProcessDomain(ctx context.Context, domain string) <-chan *c
 			return
 		}
 
-		uniqFilter := map[string]bool{}
-
 		for currentPage := 1; currentPage <= 750; currentPage++ {
 			url := "https://search.yahoo.com/search?p=site:" + domain + "&b=" + strconv.Itoa(currentPage*10) + "&pz=10&bct=0&xargs=0"
 
@@ -77,13 +75,9 @@ func (source *Yahoo) ProcessDomain(ctx context.Context, domain string) <-chan *c
 					return
 				}
 				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-					_, found := uniqFilter[str]
-					if !found {
-						uniqFilter[str] = true
-						if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-							resp.Body.Close()
-							return
-						}
+					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+						resp.Body.Close()
+						return
 					}
 				}
 			}
