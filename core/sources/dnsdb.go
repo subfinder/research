@@ -40,8 +40,6 @@ func (source *DNSDbDotCom) ProcessDomain(ctx context.Context, domain string) <-c
 		}
 		defer source.lock.Release(1)
 
-		uniqFilter := map[string]bool{}
-
 		req, err := http.NewRequest(http.MethodGet, "http://www.dnsdb.org/f/"+domain+".dnsdb.org/", nil)
 		if err != nil {
 			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
@@ -67,12 +65,8 @@ func (source *DNSDbDotCom) ProcessDomain(ctx context.Context, domain string) <-c
 
 		for scanner.Scan() {
 			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				_, found := uniqFilter[str]
-				if !found {
-					uniqFilter[str] = true
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-						return
-					}
+				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+					return
 				}
 			}
 		}
