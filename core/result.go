@@ -107,6 +107,10 @@ func (r *Result) IsSuccess() bool {
 	if r.Failure != nil {
 		return false
 	}
+	// can't be empty string
+	if fmt.Sprintf("%v", r.Success) == "" {
+		return false
+	}
 	// don't give us any of your bullshit, empty interfaces
 	if fmt.Sprintf("%v", r.Success) == "<nil>" {
 		return false
