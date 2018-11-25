@@ -56,8 +56,13 @@ func main() {
 		cmdEnumerateNoTimeoutOpt bool
 	)
 
+	var (
+		ctx    context.Context
+		cancel context.CancelFunc
+	)
+
 	cleanup := func() {
-		//cancel()
+		cancel()
 		os.Exit(0)
 	}
 
@@ -82,12 +87,6 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			jobs.Add(len(args))
 			go func() {
-
-				var (
-					ctx    context.Context
-					cancel context.CancelFunc
-				)
-
 				if cmdEnumerateNoTimeoutOpt {
 					ctx, cancel = context.WithCancel(context.Background())
 					defer cancel()
@@ -124,6 +123,10 @@ func main() {
 		PostRun: func(cmd *cobra.Command, args []string) {
 			var count = 0
 			for result := range results {
+				if ctx.Err() != nil {
+					cleanup()
+					return
+				}
 				if result.IsSuccess() {
 					count++
 					if cmdEnumerateLabelsOpt {
@@ -137,6 +140,7 @@ func main() {
 				}
 				if cmdEnumerateLimitOpt != 0 && cmdEnumerateLimitOpt == count {
 					cleanup()
+					return
 				}
 			}
 		},
