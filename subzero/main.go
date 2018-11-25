@@ -28,6 +28,7 @@ var sourcesList = []core.Source{
 	&sources.DogPile{},
 	&sources.Entrust{},
 	&sources.FindSubdomainsDotCom{},
+	&sources.GoogleSuggestions{},
 	&sources.HackerTarget{},
 	&sources.Passivetotal{},
 	&sources.PTRArchiveDotCom{},
