@@ -8,23 +8,23 @@
 # Installing SubZero
 If you're interested in testing out the alpha version of SubFinder's next command-line application experience:
 > **Note**: this is alpha software. It's not perfect, and will be eventually merged into SubFinder's main project. This is purely for those interested in early testing to help out with development.
-```shell
+```console
 $ go get -u github.com/subfinder/research/subzero
 ```
 
 ## Command-Line Usage
 You can `enumerate` a domain, like `google.com`, and optionally use the `--verbose` flag for more information.
-```shell
+```console
 $ subzero enumerate google.com --verbose
 ```
 
 Get help for any command to learn about more options.
-```shell
+```console
 $ subzero help enumerate
 ```
 
 Generic (top-level) help menu.
-```shell
+```console
 $ subzero help
 ```
 
@@ -44,8 +44,6 @@ Flags:
 
 Use "subzero [command] --help" for more information about a command.
 ```
-
-> **Note**: You can get specific help for the `enumerate` command.
 
 ```console
 $ subzero enumerate --help
@@ -67,7 +65,7 @@ Flags:
 ```
 
 #### Run Tests
-```shell
+```console
 $ cd /path/to/research
 $ GOCACHE=off go test -v -run=. ./... -race
 # just core
