@@ -30,7 +30,8 @@ $ subzero help
 
 ### Help Menu
 
-```shell
+```console
+$ subzero --help
 Usage:
   subzero [command]
 
@@ -42,6 +43,27 @@ Flags:
   -h, --help   help for subzero
 
 Use "subzero [command] --help" for more information about a command.
+```
+
+> **Note**: You can get specific help for the `enumerate` command.
+
+```console
+$ subzero enumerate --help
+Enumerate subdomains for the given domains
+
+Usage:
+  subzero enumerate [domains to enumerate] [flags]
+
+Flags:
+  -h, --help          help for enumerate
+      --insecure      include potentially insecure sources using http
+      --labels        show source of the domain in output
+      --limit int     limit the reported results to the given number
+      --no-timeout    do not timeout
+      --recursive     use results to find more results
+      --timeout int   number of seconds until timeout (default 30)
+      --uniq          filter uniq results
+      --verbose       show errors and other available diagnostic information
 ```
 
 #### Run Tests
