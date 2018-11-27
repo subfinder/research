@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"time"
 
@@ -41,9 +43,36 @@ var sourcesList = []core.Source{
 	&sources.Yahoo{},
 }
 
+func pipeGiven() bool {
+	f, _ := os.Stdin.Stat()
+	if f.Mode()&os.ModeNamedPipe == 0 {
+		return false
+	}
+	return true
+}
+
+func readStdin() <-chan string {
+	messages := make(chan string)
+	go func() {
+		defer close(messages)
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			if scanner.Err() != nil {
+				break
+			}
+			if len(scanner.Bytes()) > 0 {
+				messages <- strings.TrimSpace(scanner.Text())
+			}
+		}
+	}()
+	return messages
+}
+
 func main() {
 	results := make(chan *core.Result)
 	jobs := sync.WaitGroup{}
+
+	readablePipe := false
 
 	// enumerate command options
 	var (
@@ -80,13 +109,21 @@ func main() {
 		Short: "Enumerate subdomains for the given domains",
 		Args:  cobra.MinimumNArgs(1),
 		PreRun: func(cmd *cobra.Command, args []string) {
+			if pipeGiven() || (len(args) == 1 && args[0] == "-") {
+				readablePipe = true
+			}
 			if cmdEnumerateInsecureOpt {
 				sourcesList = append(sourcesList, &sources.PTRArchiveDotCom{})
 				sourcesList = append(sourcesList, &sources.DogPile{})
 			}
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			jobs.Add(len(args))
+			if readablePipe {
+				jobs.Add(1)
+			} else {
+				jobs.Add(len(args))
+			}
+
 			go func() {
 				if cmdEnumerateNoTimeoutOpt {
 					ctx, cancel = context.WithCancel(context.Background())
@@ -104,18 +141,39 @@ func main() {
 					Uniq:      cmdEnumerateUniqOpt,
 				}
 
-				for _, domain := range args {
-					go func(domain string) {
-						defer jobs.Done()
-						for result := range core.EnumerateSubdomains(ctx, domain, opts) {
-							select {
-							case <-ctx.Done():
-								cleanup()
-							case results <- result:
-								continue
+				if readablePipe {
+					for domain := range readStdin() {
+						jobs.Add(1)
+						go func(domain string) {
+							defer jobs.Done()
+							for result := range core.EnumerateSubdomains(ctx, domain, opts) {
+								select {
+								case <-ctx.Done():
+									cleanup()
+								case results <- result:
+									continue
+								}
 							}
-						}
-					}(domain)
+						}(domain)
+					}
+				} else {
+					for _, domain := range args {
+						go func(domain string) {
+							defer jobs.Done()
+							for result := range core.EnumerateSubdomains(ctx, domain, opts) {
+								select {
+								case <-ctx.Done():
+									cleanup()
+								case results <- result:
+									continue
+								}
+							}
+						}(domain)
+					}
+				}
+
+				if readablePipe {
+					jobs.Done()
 				}
 
 				jobs.Wait()
