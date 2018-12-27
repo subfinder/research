@@ -12,7 +12,7 @@ var subdomainExtractorMutex = &sync.Mutex{}
 func NewSubdomainExtractor(domain string) (*regexp.Regexp, error) {
 	subdomainExtractorMutex.Lock()
 	defer subdomainExtractorMutex.Unlock()
-	extractor, err := regexp.Compile(`[a-zA-Z0-9\*_.-]+\.` + domain)
+	extractor, err := regexp.Compile(`[\w-\*]+\.` + domain)
 	if err != nil {
 		return nil, err
 	}
