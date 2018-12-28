@@ -1,30 +1,7 @@
 package core
 
 import "testing"
-import "fmt"
 import "regexp"
-import "errors"
-
-func TestNewSubdomainExtractor(t *testing.T) {
-	_, err := NewSubdomainExtractor("google.com")
-	if err != nil {
-		t.Error(err)
-	}
-}
-
-func ExampleNewSubdomainExtractor() {
-	exampleText := `<a href="https://subdomain.google.com">`
-
-	extractor, err := NewSubdomainExtractor("google.com")
-	if err != nil {
-		panic(err)
-	}
-
-	subdomain := extractor.FindString(exampleText)
-
-	fmt.Println(subdomain)
-	// Output: subdomain.google.com
-}
 
 func BenchmarkSubdomainExtractorOld(b *testing.B) {
 	domain := "google.com"
@@ -64,205 +41,6 @@ func BenchmarkSubdomainExtractorNew(b *testing.B) {
 	b.Log(result)
 }
 
-// reverseBytes mutates the given slice of bytes, reversing
-// the order of the slice
-func reverseBytes(input []byte) []byte {
-	// i starts at index 0
-	// j starts at the len of the input, minus 1
-	for i, j := 0, len(input)-1;
-	// while i is less than j
-	i < j;
-	// add to i, minus from j
-	i, j = i+1, j-1 {
-		//fmt.Println(input[i])
-		input[i], input[j] = input[j], input[i]
-	}
-	return input
-}
-
-var zeroByte byte
-var errNoMoreBytes = errors.New("no more bytes")
-
-func readReverseBytes(input []byte) func() (byte, error) {
-	i := len(input)
-
-	return func() (byte, error) {
-		i--
-		if i >= 0 {
-			return input[i], nil
-		}
-		return zeroByte, errNoMoreBytes
-	}
-}
-
-var zeroStr string
-var validURLChars = []byte(".abcdefghijklmnopqrstuvwxyz1234567890-ABCDEFGHIJKLMNOPQRSTUVWXYZ*")
-var dotChar = []byte(".")[0]
-var starChar = []byte("*")[0]
-
-func singleSubdomainExtractor(domain string) func([]byte) string {
-	domain = "." + domain
-	domainLen := len(domain)
-	domainLenMinusOne := domainLen - 1
-	lastByteInDomain := domain[domainLenMinusOne]
-
-	return func(input []byte) string {
-		if len(input) <= domainLen {
-			return zeroStr
-		}
-
-		// scoped variables
-		foundSomethingInteresting := false
-		indexValue := domainLenMinusOne
-		foundBuffer := []byte{}
-
-		reader := readReverseBytes(input)
-
-		for {
-			nextByte, err := reader()
-			if err != nil {
-				if len(foundBuffer) >= domainLen {
-					return string(reverseBytes(foundBuffer))
-				}
-				return zeroStr
-			}
-
-			// wait until we found the first interesting byte,
-			// which is the last byte in the domain
-			if !foundSomethingInteresting {
-				if nextByte == lastByteInDomain {
-					foundSomethingInteresting = true
-					foundBuffer = append(foundBuffer, nextByte)
-					indexValue--
-					continue
-				}
-			}
-
-			if len(foundBuffer) < domainLen && nextByte == domain[indexValue] {
-				foundBuffer = append(foundBuffer, nextByte)
-				indexValue--
-				continue
-			}
-
-			if len(foundBuffer) >= domainLen {
-				foundNext := false
-				for _, v := range validURLChars {
-					if v == nextByte {
-						if v == dotChar && v == foundBuffer[len(foundBuffer)-1] {
-							foundNext = false
-							// remove the last dot, since it was garbage
-							foundBuffer = foundBuffer[:len(foundBuffer)-1]
-							// remove shortfind
-							if len(foundBuffer) == domainLen-1 {
-								foundBuffer = []byte{}
-							}
-							break
-						} else if v == dotChar && foundBuffer[len(foundBuffer)-1] == starChar {
-							foundNext = false
-							break
-						} else {
-							foundNext = true
-							foundBuffer = append(foundBuffer, nextByte)
-							indexValue++
-							break
-						}
-					}
-				}
-				if foundNext {
-					continue
-				} else {
-					break
-				}
-			}
-		}
-		return string(reverseBytes(foundBuffer))
-	}
-}
-
-func multiSubdomainExtractor(domain string) func([]byte) []string {
-	domain = "." + domain
-	domainLen := len(domain)
-	domainLenMinusOne := domainLen - 1
-	lastByteInDomain := domain[domainLenMinusOne]
-
-	return func(input []byte) (results []string) {
-		if len(input) <= domainLen {
-			return nil
-		}
-
-		// scoped variables
-		foundSomethingInteresting := false
-		indexValue := domainLenMinusOne
-		foundBuffer := []byte{}
-
-		reader := readReverseBytes(input)
-
-		for {
-			nextByte, err := reader()
-			if err != nil {
-				if len(results) > 0 {
-					return results
-				}
-				return nil
-			}
-
-			// wait until we found the first interesting byte,
-			// which is the last byte in the domain
-			if !foundSomethingInteresting {
-				if nextByte == lastByteInDomain {
-					foundSomethingInteresting = true
-					foundBuffer = append(foundBuffer, nextByte)
-					indexValue--
-					continue
-				}
-			}
-
-			if len(foundBuffer) < domainLen && nextByte == domain[indexValue] {
-				foundBuffer = append(foundBuffer, nextByte)
-				indexValue--
-				continue
-			}
-
-			if len(foundBuffer) >= domainLen {
-				foundNext := false
-				for _, v := range validURLChars {
-					if v == nextByte {
-						if v == dotChar && v == foundBuffer[len(foundBuffer)-1] {
-							foundNext = false
-							// remove the last dot, since it was garbage
-							foundBuffer = foundBuffer[:len(foundBuffer)-1]
-							// remove shortfind
-							if len(foundBuffer) == domainLen-1 {
-								foundBuffer = []byte{}
-							}
-							break
-						} else if v == dotChar && foundBuffer[len(foundBuffer)-1] == starChar {
-							foundNext = false
-							break
-						} else {
-							foundNext = true
-							foundBuffer = append(foundBuffer, nextByte)
-							break
-						}
-					}
-				}
-				if foundNext {
-					continue
-				} else {
-					if len(foundBuffer) >= domainLen {
-						results = append(results, string(reverseBytes(foundBuffer)))
-					}
-					foundSomethingInteresting = false
-					foundBuffer = []byte{}
-					indexValue = domainLenMinusOne
-					continue
-				}
-			}
-			continue
-		}
-	}
-}
-
 func BenchmarkSubdomainExtractorCustom(b *testing.B) {
 
 	domain := "google.com"
@@ -271,7 +49,7 @@ func BenchmarkSubdomainExtractorCustom(b *testing.B) {
 
 	exampleText := []byte(`<a href="https://subdomain.google.com">`)
 
-	extractor := singleSubdomainExtractor(domain)
+	extractor := NewSingleSubdomainExtractor(domain)
 
 	for n := 0; n < b.N; n++ {
 		result = extractor(exampleText)
@@ -286,9 +64,9 @@ func BenchmarkSubdomainExtractorCustomMulti(b *testing.B) {
 
 	var results []string
 
-	exampleText := []byte(`<a href="https://subdomain1.google.com">`)
+	exampleText := []byte(`<a href="https://subdomain.google.com">`)
 
-	extractor := multiSubdomainExtractor(domain)
+	extractor := NewMultiSubdomainExtractor(domain)
 
 	for n := 0; n < b.N; n++ {
 		results = extractor(exampleText)
