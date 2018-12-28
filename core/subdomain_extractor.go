@@ -61,7 +61,7 @@ func NewSingleSubdomainExtractor(domain string) func([]byte) string {
 		for {
 			nextByte, err := reader()
 			if err != nil {
-				if len(foundBuffer) >= domainLen {
+				if len(foundBuffer) > domainLen {
 					return string(reverseBytes(foundBuffer))
 				}
 				return zeroStr
@@ -115,6 +115,9 @@ func NewSingleSubdomainExtractor(domain string) func([]byte) string {
 				}
 			}
 		}
+		if len(foundBuffer) == domainLen {
+			return zeroStr
+		}
 		return string(reverseBytes(foundBuffer))
 	}
 }
@@ -142,10 +145,10 @@ func NewMultiSubdomainExtractor(domain string) func([]byte) []string {
 		for {
 			nextByte, err := reader()
 			if err != nil {
-				if len(results) > 0 {
-					return results
+				if len(foundBuffer) > domainLen {
+					results = append(results, string(reverseBytes(foundBuffer)))
 				}
-				return nil
+				return results
 			}
 
 			// wait until we found the first interesting byte,
@@ -191,7 +194,7 @@ func NewMultiSubdomainExtractor(domain string) func([]byte) []string {
 				if foundNext {
 					continue
 				} else {
-					if len(foundBuffer) >= domainLen {
+					if len(foundBuffer) > domainLen {
 						results = append(results, string(reverseBytes(foundBuffer)))
 					}
 					foundSomethingInteresting = false
