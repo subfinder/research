@@ -21,28 +21,22 @@ func (source *ThreatCrowd) ProcessDomain(ctx context.Context, domain string) <-c
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "threatcrowd"
-
 	results := make(chan *core.Result)
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(threatcrowdLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		req, err := http.NewRequest(http.MethodGet, "https://www.threatcrowd.org/searchApi/v2/domain/report/?domain="+domain, nil)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(threatcrowdLabel, nil, err))
 			return
 		}
 
@@ -51,24 +45,27 @@ func (source *ThreatCrowd) ProcessDomain(ctx context.Context, domain string) <-c
 
 		resp, err := core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(threatcrowdLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(threatcrowdLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
 		scanner := bufio.NewScanner(resp.Body)
 
+		scanner.Split(bufio.ScanWords)
+
 		for scanner.Scan() {
 			if ctx.Err() != nil {
 				return
 			}
-			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+			str := domainExtractor(scanner.Bytes())
+			if str != "" {
+				if !sendResultWithContext(ctx, results, core.NewResult(threatcrowdLabel, str, nil)) {
 					return
 				}
 			}
@@ -77,7 +74,7 @@ func (source *ThreatCrowd) ProcessDomain(ctx context.Context, domain string) <-c
 		err = scanner.Err()
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(threatcrowdLabel, nil, err))
 			return
 		}
 
