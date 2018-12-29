@@ -12,14 +12,15 @@ import (
 func TestCommonCrawlDotOrg(t *testing.T) {
 	domain := "bing.com"
 	source := CommonCrawlDotOrg{}
-	results := []*core.Result{}
+	results := []interface{}{}
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
 
-	for result := range source.ProcessDomain(ctx, domain) {
-		fmt.Println(result)
-		results = append(results, result)
+	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
+		results = append(results, result.Success)
 	}
+
+	fmt.Println(results)
 
 	if !(len(results) >= 3) {
 		t.Errorf("expected at least 3 result(s), got '%v'", len(results))
