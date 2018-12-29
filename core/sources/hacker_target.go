@@ -23,30 +23,25 @@ func (source *HackerTarget) ProcessDomain(ctx context.Context, domain string) <-
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "hackertarget"
-
 	results := make(chan *core.Result)
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(hackertargetLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		// get response from the API, optionally with an API key
 		var resp *http.Response
 
 		// http req
 		var req *http.Request
+		var err error
 
 		// check API key
 		if source.APIKey != "" {
@@ -55,7 +50,7 @@ func (source *HackerTarget) ProcessDomain(ctx context.Context, domain string) <-
 			req, err = http.NewRequest(http.MethodGet, "https://api.hackertarget.com/hostsearch/?q="+domain, nil)
 		}
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(hackertargetLabel, nil, err))
 			return
 		}
 
@@ -64,13 +59,13 @@ func (source *HackerTarget) ProcessDomain(ctx context.Context, domain string) <-
 
 		resp, err = core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(hackertargetLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(hackertargetLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
@@ -83,8 +78,9 @@ func (source *HackerTarget) ProcessDomain(ctx context.Context, domain string) <-
 				sendResultWithContext(ctx, results, core.NewResult("hackertarget", nil, errors.New(str)))
 				return
 			}
-			for _, str := range domainExtractor.FindAllString(str, -1) {
-				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+			str = domainExtractor([]byte(str))
+			if str != "" {
+				if !sendResultWithContext(ctx, results, core.NewResult(hackertargetLabel, str, nil)) {
 					return
 				}
 			}
@@ -93,7 +89,7 @@ func (source *HackerTarget) ProcessDomain(ctx context.Context, domain string) <-
 		err = scanner.Err()
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(hackertargetLabel, nil, err))
 			return
 		}
 	}(domain, results)
