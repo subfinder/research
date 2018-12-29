@@ -19,7 +19,7 @@ func TestWaybackArchive(t *testing.T) {
 	success := 0
 	failure := 0
 
-	for result := range source.ProcessDomain(ctx, domain) {
+	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
 		fmt.Println(result)
 		results = append(results, result)
 		if result.Failure != nil {
@@ -29,7 +29,8 @@ func TestWaybackArchive(t *testing.T) {
 		}
 	}
 
-	t.Log(len(results), "\n", "Success: ", success, "Failure: ", failure)
+	fmt.Println(results)
+
 	if !(len(results) >= 1) {
 		t.Errorf("expected more than 1 result(s), got '%v'", len(results))
 	}
