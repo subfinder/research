@@ -10,16 +10,17 @@ import (
 )
 
 func TestCertDB(t *testing.T) {
-	domain := "google.com"
+	domain := "emich.edu"
 	source := CertDB{}
-	results := []*core.Result{}
+	results := []interface{}{}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	for result := range source.ProcessDomain(ctx, domain) {
-		t.Log(result)
-		results = append(results, result)
+	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
+		results = append(results, result.Success)
 	}
+
+	fmt.Println(results)
 
 	if !(len(results) >= 2) {
 		t.Errorf("expected more than 2 result(s), got '%v'", len(results))
@@ -41,7 +42,6 @@ func TestCertDBRecursive(t *testing.T) {
 	for result := range core.EnumerateSubdomains(ctx, domain, options) {
 		results = append(results, result)
 		fmt.Println(result)
-
 	}
 
 	if !(len(results) >= 5) {
