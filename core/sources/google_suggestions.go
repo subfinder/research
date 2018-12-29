@@ -33,11 +33,7 @@ func (source *GoogleSuggestions) ProcessDomain(ctx context.Context, domain strin
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		req, err := http.NewRequest(http.MethodGet, "https://www.google.com/complete/search?output=search&client=chrome&q="+domain, nil)
 		if err != nil {
@@ -85,7 +81,8 @@ func (source *GoogleSuggestions) ProcessDomain(ctx context.Context, domain strin
 			if ctx.Err() != nil {
 				return
 			}
-			for _, str := range domainExtractor.FindAllString(s, -1) {
+			str := domainExtractor([]byte(s))
+			if str != "" {
 				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
 					return
 				}
