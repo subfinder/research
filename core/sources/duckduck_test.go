@@ -12,16 +12,17 @@ import (
 func TestDuckDuckGo(t *testing.T) {
 	domain := "google.com"
 	source := DuckDuckGo{}
-	results := []*core.Result{}
+	results := []interface{}{}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	for result := range source.ProcessDomain(ctx, domain) {
-		fmt.Println(result)
-		results = append(results, result)
+	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
+		results = append(results, result.Success)
 	}
 
-	if !(len(results) >= 10) {
-		t.Errorf("expected more than 10 result(s), got '%v'", len(results))
+	fmt.Println(results)
+
+	if !(len(results) >= 1) {
+		t.Errorf("expected more than 1 result(s), got '%v'", len(results))
 	}
 }
