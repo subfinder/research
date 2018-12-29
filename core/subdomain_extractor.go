@@ -85,10 +85,17 @@ func NewSingleSubdomainExtractor(domain string) func([]byte) string {
 				}
 			}
 
-			if len(foundBuffer) < domainLen && nextByte == domain[indexValue] {
-				foundBuffer = append(foundBuffer, nextByte)
-				indexValue--
-				continue
+			if len(foundBuffer) < domainLen {
+				if nextByte == domain[indexValue] {
+					foundBuffer = append(foundBuffer, nextByte)
+					indexValue--
+					continue
+				} else {
+					// reset
+					indexValue = domainLenMinusOne
+					foundSomethingInteresting = false
+					foundBuffer = foundBuffer[:0]
+				}
 			}
 
 			if len(foundBuffer) >= domainLen {
@@ -110,7 +117,6 @@ func NewSingleSubdomainExtractor(domain string) func([]byte) string {
 						} else {
 							foundNext = true
 							foundBuffer = append(foundBuffer, nextByte)
-							indexValue++
 							break
 						}
 					}
@@ -122,7 +128,7 @@ func NewSingleSubdomainExtractor(domain string) func([]byte) string {
 				}
 			}
 		}
-		if len(foundBuffer) == domainLen {
+		if len(foundBuffer) <= domainLen {
 			return zeroStr
 		}
 		return string(reverseBytes(foundBuffer))
