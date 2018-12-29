@@ -27,25 +27,20 @@ func (source *Virustotal) ProcessDomain(ctx context.Context, domain string) <-ch
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "virustotal"
-
 	results := make(chan *core.Result)
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(virustotalLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		var req *http.Request
+		var err error
 
 		if source.APIToken == "" {
 			req, err = http.NewRequest(http.MethodGet, "https://www.virustotal.com/en/domain/"+domain+"/information/", nil)
@@ -54,7 +49,7 @@ func (source *Virustotal) ProcessDomain(ctx context.Context, domain string) <-ch
 		}
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(virustotalLabel, nil, err))
 			return
 		}
 
@@ -63,13 +58,13 @@ func (source *Virustotal) ProcessDomain(ctx context.Context, domain string) <-ch
 
 		resp, err := core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(virustotalLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(virustotalLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
@@ -79,8 +74,9 @@ func (source *Virustotal) ProcessDomain(ctx context.Context, domain string) <-ch
 				if ctx.Err() != nil {
 					return
 				}
-				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+				str := domainExtractor(scanner.Bytes())
+				if str != "" {
+					if !sendResultWithContext(ctx, results, core.NewResult(virustotalLabel, str, nil)) {
 						return
 					}
 				}
@@ -89,7 +85,7 @@ func (source *Virustotal) ProcessDomain(ctx context.Context, domain string) <-ch
 			err = scanner.Err()
 
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(virustotalLabel, nil, err))
 				return
 			}
 		} else {
@@ -97,13 +93,13 @@ func (source *Virustotal) ProcessDomain(ctx context.Context, domain string) <-ch
 
 			err = json.NewDecoder(resp.Body).Decode(&hostResponse)
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(virustotalLabel, nil, err))
 				return
 			}
 
 			for _, sub := range hostResponse.Subdomains {
 				str := sub + "." + domain
-				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+				if !sendResultWithContext(ctx, results, core.NewResult(virustotalLabel, str, nil)) {
 					return
 				}
 			}
