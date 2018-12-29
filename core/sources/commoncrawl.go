@@ -21,28 +21,22 @@ func (source *CommonCrawlDotOrg) ProcessDomain(ctx context.Context, domain strin
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "commoncrawl"
-
 	results := make(chan *core.Result)
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(commoncrawlLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		req, err := http.NewRequest(http.MethodGet, "https://index.commoncrawl.org/CC-MAIN-2018-17-index?url=*."+domain+"&output=json", nil)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(commoncrawlLabel, nil, err))
 			return
 		}
 
@@ -51,13 +45,13 @@ func (source *CommonCrawlDotOrg) ProcessDomain(ctx context.Context, domain strin
 
 		resp, err := core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(commoncrawlLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(commoncrawlLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
@@ -67,8 +61,11 @@ func (source *CommonCrawlDotOrg) ProcessDomain(ctx context.Context, domain strin
 			if ctx.Err() != nil {
 				return
 			}
-			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+
+			str := domainExtractor(scanner.Bytes())
+
+			if str != "" {
+				if !sendResultWithContext(ctx, results, core.NewResult(commoncrawlLabel, str, nil)) {
 					return
 				}
 			}
@@ -77,7 +74,7 @@ func (source *CommonCrawlDotOrg) ProcessDomain(ctx context.Context, domain strin
 		err = scanner.Err()
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(commoncrawlLabel, nil, err))
 			return
 		}
 
