@@ -27,30 +27,24 @@ func (source *DogPile) ProcessDomain(ctx context.Context, domain string) <-chan 
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "dogpile"
-
 	results := make(chan *core.Result)
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(dogpileLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		for currentPage := 1; currentPage <= 750; currentPage++ {
 			url := "http://www.dogpile.com/search/web?q=" + domain + "&qsi=" + strconv.Itoa(currentPage*15+1)
 			req, err := http.NewRequest(http.MethodGet, url, nil)
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(dogpileLabel, nil, err))
 				return
 			}
 
@@ -59,13 +53,13 @@ func (source *DogPile) ProcessDomain(ctx context.Context, domain string) <-chan 
 
 			resp, err := core.HTTPClient.Do(req)
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(dogpileLabel, nil, err))
 				return
 			}
 
 			if resp.StatusCode != 200 {
 				resp.Body.Close()
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+				sendResultWithContext(ctx, results, core.NewResult(dogpileLabel, nil, errors.New(resp.Status)))
 				return
 			}
 
@@ -78,8 +72,9 @@ func (source *DogPile) ProcessDomain(ctx context.Context, domain string) <-chan 
 					resp.Body.Close()
 					return
 				}
-				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+				str := domainExtractor(scanner.Bytes())
+				if str != "" {
+					if !sendResultWithContext(ctx, results, core.NewResult(dogpileLabel, str, nil)) {
 						resp.Body.Close()
 						return
 					}
@@ -90,7 +85,7 @@ func (source *DogPile) ProcessDomain(ctx context.Context, domain string) <-chan 
 
 			if err != nil {
 				resp.Body.Close()
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(dogpileLabel, nil, err))
 				return
 			}
 
