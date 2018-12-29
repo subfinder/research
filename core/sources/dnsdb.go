@@ -21,28 +21,23 @@ func (source *DNSDbDotCom) ProcessDomain(ctx context.Context, domain string) <-c
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "dnsdbd"
-
 	results := make(chan *core.Result)
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(dnsdbdLabel, nil, err))
 			return
 		}
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
+
 		defer source.lock.Release(1)
 
 		req, err := http.NewRequest(http.MethodGet, "http://www.dnsdb.org/f/"+domain+".dnsdb.org/", nil)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(dnsdbdLabel, nil, err))
 			return
 		}
 
@@ -51,21 +46,22 @@ func (source *DNSDbDotCom) ProcessDomain(ctx context.Context, domain string) <-c
 
 		resp, err := core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(dnsdbdLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(dnsdbdLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
 		scanner := bufio.NewScanner(resp.Body)
 
 		for scanner.Scan() {
-			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+			str := domainExtractor(scanner.Bytes())
+			if str != "" {
+				if !sendResultWithContext(ctx, results, core.NewResult(dnsdbdLabel, str, nil)) {
 					return
 				}
 			}
@@ -74,7 +70,7 @@ func (source *DNSDbDotCom) ProcessDomain(ctx context.Context, domain string) <-c
 		err = scanner.Err()
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(dnsdbdLabel, nil, err))
 			return
 		}
 
