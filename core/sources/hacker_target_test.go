@@ -2,7 +2,7 @@ package sources
 
 import (
 	"context"
-	"strings"
+	"fmt"
 	"testing"
 	"time"
 
@@ -12,19 +12,18 @@ import (
 func TestHackerTarget(t *testing.T) {
 	domain := "google.com"
 	source := HackerTarget{}
-	results := []*core.Result{}
+	results := []interface{}{}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	for result := range source.ProcessDomain(ctx, domain) {
-		t.Log(result)
-		results = append(results, result)
+	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
+		results = append(results, result.Success)
 	}
 
+	fmt.Println(results)
+
 	if len(results) == 1 {
-		if !strings.Contains(results[0].Failure.Error(), "API count exceeded") {
-			t.Errorf("expected to return API count error, got '%v'", results[0].Failure.Error())
-		}
+		t.Errorf("expected to return API count error, got '%v'", results[0])
 	} else {
 		if !(len(results) >= 4000) {
 			t.Errorf("expected to return more than one successful result, got %v", len(results))
