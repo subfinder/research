@@ -27,28 +27,22 @@ func (source *CrtSh) ProcessDomain(ctx context.Context, domain string) <-chan *c
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "crtsh"
-
 	results := make(chan *core.Result)
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(crtshLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		req, err := http.NewRequest(http.MethodGet, "https://crt.sh/?q=%25."+domain+"&output=json", nil)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(crtshLabel, nil, err))
 			return
 		}
 
@@ -57,13 +51,13 @@ func (source *CrtSh) ProcessDomain(ctx context.Context, domain string) <-chan *c
 
 		resp, err := core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(crtshLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(crtshLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
@@ -83,12 +77,13 @@ func (source *CrtSh) ProcessDomain(ctx context.Context, domain string) <-chan *c
 				err = json.Unmarshal(jsonBuffer.Bytes(), &object)
 				jsonBuffer.Reset()
 				if err != nil {
-					sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+					sendResultWithContext(ctx, results, core.NewResult(crtshLabel, nil, err))
 					continue
 				}
 				// This could potentially be made more efficient.
-				for _, str := range domainExtractor.FindAllString(object.NameValue, -1) {
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+				str := domainExtractor([]byte(object.NameValue))
+				if str != "" {
+					if !sendResultWithContext(ctx, results, core.NewResult(crtshLabel, str, nil)) {
 						return
 					}
 				}
@@ -97,7 +92,7 @@ func (source *CrtSh) ProcessDomain(ctx context.Context, domain string) <-chan *c
 			err = scanner.Err()
 
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(crtshLabel, nil, err))
 				return
 			}
 		}
@@ -105,7 +100,7 @@ func (source *CrtSh) ProcessDomain(ctx context.Context, domain string) <-chan *c
 		err = scanner.Err()
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(crtshLabel, nil, err))
 			return
 		}
 	}(domain, results)
