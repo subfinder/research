@@ -10,7 +10,7 @@ import (
 )
 
 func TestRiddler(t *testing.T) {
-	domain := "bing.com"
+	domain := "google.com"
 	source := Riddler{}
 	results := []*core.Result{}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
