@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"net/http"
-	"strconv"
 
 	"golang.org/x/sync/semaphore"
+	"net/http"
+	"strconv"
 
 	"github.com/subfinder/research/core"
 )
@@ -23,24 +23,18 @@ func (source *ArchiveIs) ProcessDomain(ctx context.Context, domain string) <-cha
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "archiveis"
-
 	results := make(chan *core.Result)
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(archiveisLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		for currentPage := 0; currentPage <= 750; currentPage += 10 {
 			if ctx.Err() != nil {
@@ -51,7 +45,7 @@ func (source *ArchiveIs) ProcessDomain(ctx context.Context, domain string) <-cha
 
 			req, err := http.NewRequest(http.MethodGet, url, nil)
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(archiveisLabel, nil, err))
 				return
 			}
 
@@ -60,13 +54,13 @@ func (source *ArchiveIs) ProcessDomain(ctx context.Context, domain string) <-cha
 
 			resp, err := core.HTTPClient.Do(req)
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(archiveisLabel, nil, err))
 				return
 			}
 
 			if resp.StatusCode != 200 {
 				resp.Body.Close()
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+				sendResultWithContext(ctx, results, core.NewResult(archiveisLabel, nil, errors.New(resp.Status)))
 				return
 			}
 
@@ -78,15 +72,14 @@ func (source *ArchiveIs) ProcessDomain(ctx context.Context, domain string) <-cha
 				if ctx.Err() != nil {
 					return
 				}
-				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-					if ctx.Err() != nil {
-						return
-					}
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
-						resp.Body.Close()
-						return
-					}
+
+				str := domainExtractor(scanner.Bytes())
+
+				if !sendResultWithContext(ctx, results, core.NewResult(archiveisLabel, str, nil)) {
+					resp.Body.Close()
+					return
 				}
+
 			}
 
 			resp.Body.Close()
@@ -94,7 +87,7 @@ func (source *ArchiveIs) ProcessDomain(ctx context.Context, domain string) <-cha
 			err = scanner.Err()
 
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(archiveisLabel, nil, err))
 				return
 			}
 		}
