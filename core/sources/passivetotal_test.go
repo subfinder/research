@@ -16,14 +16,15 @@ func TestPassivetotal(t *testing.T) {
 		APIToken:    os.Getenv("PassivetotalKey"),
 		APIUsername: os.Getenv("PassivetotalUsername"),
 	}
-	results := []*core.Result{}
+	results := []interface{}{}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	for result := range source.ProcessDomain(ctx, domain) {
-		fmt.Println(result)
-		results = append(results, result)
+	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
+		results = append(results, result.Success)
 	}
+
+	fmt.Println(results)
 
 	fmt.Println("found", len(results), ctx.Err())
 }
