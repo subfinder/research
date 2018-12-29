@@ -33,10 +33,12 @@ func readReverseBytes(input []byte) func() (byte, error) {
 	}
 }
 
+//var validURLChars = []byte(".abcdefghijklmnopqrstuvwxyz1234567890-ABCDEFGHIJKLMNOPQRSTUVWXYZ*")
+var validURLChars = []byte(".abcdefghijklmnopqrstuvwxyz1234567890-*")
 var zeroStr string
-var validURLChars = []byte(".abcdefghijklmnopqrstuvwxyz1234567890-ABCDEFGHIJKLMNOPQRSTUVWXYZ*")
 var dotChar = []byte(".")[0]
 var starChar = []byte("*")[0]
+var percChar = []byte("%")[0]
 
 // NewSingleSubdomainExtractor creates a new extractor that looks for
 // only one subdomain.
