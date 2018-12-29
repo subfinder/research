@@ -25,8 +25,6 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "certspotter"
-
 	wg := sync.WaitGroup{}
 
 	wg.Add(3)
@@ -38,23 +36,19 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 		defer wg.Done()
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		url := "https://certspotter.com/api/v0/certs?domain=" + domain
 
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, nil, err))
 			return
 		}
 
@@ -63,13 +57,13 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 
 		resp, err := core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
@@ -79,8 +73,9 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 			if ctx.Err() != nil {
 				return
 			}
-			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+			str := domainExtractor(scanner.Bytes())
+			if str != "" {
+				if !sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, str, nil)) {
 					return
 				}
 			}
@@ -89,7 +84,7 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 		err = scanner.Err()
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, nil, err))
 			return
 		}
 
@@ -99,18 +94,14 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 	go func(domain string, results chan *core.Result) {
 		defer wg.Done()
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		url := "https://api.certspotter.com/v1/certs?domain=" + domain + "&include_subdomains=true&expand=dns_names&match_wildcards=true"
 
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, nil, err))
 			return
 		}
 
@@ -122,13 +113,13 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 
 		resp, err := core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
@@ -154,8 +145,8 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 				continue
 			}
 
-			for _, str := range domainExtractor.FindAllString(string(decodedData), -1) {
-				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+			for _, str := range domainExtractor(decodedData) {
+				if !sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, str, nil)) {
 					return
 				}
 			}
@@ -164,7 +155,7 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 		err = scanner.Err()
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, nil, err))
 			return
 		}
 
@@ -174,18 +165,14 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 	go func(domain string, results chan *core.Result) {
 		defer wg.Done()
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		url := "https://api.certspotter.com/v1/issuances?domain=" + domain + "&include_subdomains=true&expand=dns_names&match_wildcards=true"
 
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, nil, err))
 			return
 		}
 
@@ -197,13 +184,13 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 
 		resp, err := core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
@@ -213,8 +200,8 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 			if ctx.Err() != nil {
 				return
 			}
-			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+			for _, str := range domainExtractor(scanner.Bytes()) {
+				if !sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, str, nil)) {
 					return
 				}
 			}
@@ -223,7 +210,7 @@ func (source *CertSpotter) ProcessDomain(ctx context.Context, domain string) <-c
 		err = scanner.Err()
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certspotterLabel, nil, err))
 			return
 		}
 
