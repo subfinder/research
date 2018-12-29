@@ -28,24 +28,22 @@ func (source *Passivetotal) ProcessDomain(ctx context.Context, domain string) <-
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "passivetotal"
-
 	results := make(chan *core.Result)
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if source.APIToken == "" {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New("no api token")))
+			sendResultWithContext(ctx, results, core.NewResult(passivetotalLabel, nil, errors.New("no api token")))
 			return
 		}
 
 		if source.APIUsername == "" {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New("no api username")))
+			sendResultWithContext(ctx, results, core.NewResult(passivetotalLabel, nil, errors.New("no api username")))
 			return
 		}
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(passivetotalLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
@@ -55,7 +53,7 @@ func (source *Passivetotal) ProcessDomain(ctx context.Context, domain string) <-
 		req, err := http.NewRequest("GET", "https://api.passivetotal.org/v2/enrichment/subdomains", bytes.NewBuffer(body))
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(passivetotalLabel, nil, err))
 			return
 		}
 
@@ -67,13 +65,13 @@ func (source *Passivetotal) ProcessDomain(ctx context.Context, domain string) <-
 
 		resp, err := core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(passivetotalLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(passivetotalLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
@@ -81,13 +79,13 @@ func (source *Passivetotal) ProcessDomain(ctx context.Context, domain string) <-
 
 		err = json.NewDecoder(resp.Body).Decode(&hostResponse)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(passivetotalLabel, nil, err))
 			return
 		}
 
 		for _, sub := range hostResponse.Subdomains {
 			str := sub + "." + domain
-			if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+			if !sendResultWithContext(ctx, results, core.NewResult(passivetotalLabel, str, nil)) {
 				return
 			}
 		}
