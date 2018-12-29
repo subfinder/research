@@ -10,8 +10,8 @@ import (
 var HTTPClient = &http.Client{
 	Transport: &http.Transport{
 		Dial: (&net.Dialer{
-			Timeout: 15 * time.Second,
-			//KeepAlive: 600 * time.Second,
+			Timeout:   15 * time.Second,
+			KeepAlive: 60 * time.Second,
 		}).Dial,
 		MaxIdleConns:          200,
 		MaxIdleConnsPerHost:   1,
