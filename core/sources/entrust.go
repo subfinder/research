@@ -22,28 +22,22 @@ func (source *Entrust) ProcessDomain(ctx context.Context, domain string) <-chan 
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "entrust"
-
 	results := make(chan *core.Result)
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(entrustLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		req, err := http.NewRequest(http.MethodGet, "https://ctsearch.entrust.com/api/v1/certificates?fields=subjectDN&domain="+domain+"&includeExpired=true&exactMatch=false&limit=5000", nil)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(entrustLabel, nil, err))
 			return
 		}
 
@@ -52,13 +46,13 @@ func (source *Entrust) ProcessDomain(ctx context.Context, domain string) <-chan 
 
 		resp, err := core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(entrustLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(entrustLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
@@ -68,9 +62,9 @@ func (source *Entrust) ProcessDomain(ctx context.Context, domain string) <-chan 
 			if ctx.Err() != nil {
 				return
 			}
-			txt := strings.Replace(scanner.Text(), "u003d", " ", -1)
-			for _, str := range domainExtractor.FindAllString(txt, -1) {
-				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+			str := domainExtractor([]byte(strings.Replace(scanner.Text(), "u003d", " ", -1)))
+			if str != "" {
+				if !sendResultWithContext(ctx, results, core.NewResult(entrustLabel, str, nil)) {
 					return
 				}
 			}
@@ -79,7 +73,7 @@ func (source *Entrust) ProcessDomain(ctx context.Context, domain string) <-chan 
 		err = scanner.Err()
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(entrustLabel, nil, err))
 			return
 		}
 
