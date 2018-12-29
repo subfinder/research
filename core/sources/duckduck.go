@@ -21,27 +21,21 @@ func (source *DuckDuckGo) ProcessDomain(ctx context.Context, domain string) <-ch
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "duckduckgo"
-
 	results := make(chan *core.Result)
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(duckduckgoLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		req, err := http.NewRequest(http.MethodGet, "https://duckduckgo.com/html/?kd=-1&q="+domain, nil)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(duckduckgoLabel, nil, err))
 			return
 		}
 
@@ -50,24 +44,27 @@ func (source *DuckDuckGo) ProcessDomain(ctx context.Context, domain string) <-ch
 
 		resp, err := core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(duckduckgoLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(duckduckgoLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
 		scanner := bufio.NewScanner(resp.Body)
 
+		scanner.Split(bufio.ScanWords)
+
 		for scanner.Scan() {
 			if ctx.Err() != nil {
 				return
 			}
-			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+			str := domainExtractor(scanner.Bytes())
+			if str != "" {
+				if !sendResultWithContext(ctx, results, core.NewResult(duckduckgoLabel, str, nil)) {
 					return
 				}
 			}
@@ -76,7 +73,7 @@ func (source *DuckDuckGo) ProcessDomain(ctx context.Context, domain string) <-ch
 		err = scanner.Err()
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(duckduckgoLabel, nil, err))
 			return
 		}
 	}(domain, results)
