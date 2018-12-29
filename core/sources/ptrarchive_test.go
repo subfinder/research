@@ -21,6 +21,8 @@ func TestPTRArchiveDotCom(t *testing.T) {
 		results = append(results, result)
 	}
 
+	fmt.Println(results)
+
 	if !(len(results) >= 35) {
 		t.Errorf("expected more than 35 result(s), got '%v'", len(results))
 	}
