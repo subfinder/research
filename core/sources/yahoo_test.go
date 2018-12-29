@@ -2,6 +2,7 @@ package sources
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -11,18 +12,19 @@ import (
 func TestYahoo(t *testing.T) {
 	domain := "google.com"
 	source := Yahoo{}
-	results := []*core.Result{}
+	results := []interface{}{}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	for result := range source.ProcessDomain(ctx, domain) {
-		t.Log(result)
-		results = append(results, result)
+	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
+		results = append(results, result.Success)
 		// Not waiting around to iterate all the possible results.
 		if len(results) >= 10 {
 			cancel()
 		}
 	}
+
+	fmt.Println(results)
 
 	if !(len(results) >= 10) {
 		t.Errorf("expected more than 20 result(s), got '%v'", len(results))
