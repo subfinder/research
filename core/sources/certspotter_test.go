@@ -12,26 +12,18 @@ import (
 func TestCertSpotter(t *testing.T) {
 	domain := "google.com"
 	source := CertSpotter{}
-	results := []*core.Result{}
+	results := []interface{}{}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	uniqFilter := map[string]bool{}
-
-	for result := range source.ProcessDomain(ctx, domain) {
-		if result.IsSuccess() {
-			str := result.Success.(string)
-			_, found := uniqFilter[str]
-			if !found {
-				uniqFilter[str] = true
-				fmt.Println(result)
-				results = append(results, result)
-			}
-		}
+	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
+		results = append(results, result.Success)
 	}
 
-	if !(len(results) >= 3000) {
-		t.Errorf("expected more than 3000 results, got '%v'", len(results))
+	fmt.Println(results)
+
+	if !(len(results) > 0) {
+		t.Errorf("expected more than 0 results, got '%v'", len(results))
 	}
 }
 
