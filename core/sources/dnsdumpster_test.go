@@ -10,7 +10,7 @@ import (
 )
 
 func TestDNSDumpster(t *testing.T) {
-	domain := "apple.com"
+	domain := "google.com"
 	source := DNSDumpster{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -24,7 +24,7 @@ func TestDNSDumpster(t *testing.T) {
 		if counter == 20 {
 			cancel()
 		}
-		t.Log(result.Success)
+		fmt.Println(result.Success)
 	}
 
 	fmt.Println("found", counter, ctx.Err())
