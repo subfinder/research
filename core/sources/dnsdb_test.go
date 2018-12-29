@@ -12,14 +12,15 @@ import (
 func TestDNSDbDotCom(t *testing.T) {
 	domain := "bing.com"
 	source := &DNSDbDotCom{}
-	results := []*core.Result{}
+	results := []interface{}{}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	for result := range source.ProcessDomain(ctx, domain) {
-		fmt.Println(result)
-		results = append(results, result)
+		results = append(results, result.Success)
 	}
+
+	fmt.Println(results)
 
 	if !(len(results) >= 400) {
 		t.Errorf("expected more than 400 result(s), got '%v'", len(results))
