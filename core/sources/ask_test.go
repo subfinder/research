@@ -12,19 +12,15 @@ import (
 func TestAsk(t *testing.T) {
 	domain := "google.com"
 	source := Ask{}
-	results := []*core.Result{}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	results := []interface{}{}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	for result := range source.ProcessDomain(ctx, domain) {
-		//fmt.Println(result)
-		results = append(results, result)
-		fmt.Println(result)
-		// Not waiting around to iterate all the possible pages.
-		//if len(results) >= 5 {
-		//	cancel()
-		//}
+	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
+		results = append(results, result.Success)
 	}
+
+	fmt.Println(results)
 
 	if !(len(results) >= 5) {
 		t.Errorf("expected more than 5 result(s), got '%v'", len(results))
