@@ -16,7 +16,7 @@ func TestEntrust(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	for result := range source.ProcessDomain(ctx, domain) {
+	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
 		fmt.Println(result)
 		results = append(results, result)
 		// Not waiting around to iterate all the possible results.
