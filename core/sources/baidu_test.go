@@ -12,19 +12,20 @@ import (
 func TestBaidu(t *testing.T) {
 	domain := "google.com"
 	source := Baidu{}
-	results := []*core.Result{}
+	results := []interface{}{}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	for result := range source.ProcessDomain(ctx, domain) {
 		t.Log(result)
-		results = append(results, result)
+		results = append(results, result.Success)
 		// Not waiting around to iterate all the possible pages.
 		if len(results) >= 20 {
 			cancel()
 		}
 	}
 
+	fmt.Println(results)
 	if !(len(results) >= 20) {
 		t.Errorf("expected more than 20 result(s), got '%v'", len(results))
 	}
