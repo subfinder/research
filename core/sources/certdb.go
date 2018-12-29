@@ -21,27 +21,21 @@ func (source *CertDB) ProcessDomain(ctx context.Context, domain string) <-chan *
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "certdb"
-
 	results := make(chan *core.Result)
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certdbLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		req, err := http.NewRequest(http.MethodGet, "https://certdb.com/domain/"+domain, nil)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certdbLabel, nil, err))
 			return
 		}
 
@@ -50,13 +44,13 @@ func (source *CertDB) ProcessDomain(ctx context.Context, domain string) <-chan *
 
 		resp, err := core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certdbLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(certdbLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
@@ -66,18 +60,20 @@ func (source *CertDB) ProcessDomain(ctx context.Context, domain string) <-chan *
 			if ctx.Err() != nil {
 				return
 			}
-			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+
+			str := domainExtractor(scanner.Bytes())
+
+			if str != "" {
+				if !sendResultWithContext(ctx, results, core.NewResult(certdbLabel, str, nil)) {
 					return
 				}
-
 			}
 		}
 
 		err = scanner.Err()
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(certdbLabel, nil, err))
 			return
 		}
 
