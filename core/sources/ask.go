@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"errors"
+
 	"net/http"
 	"strconv"
 	"strings"
@@ -23,29 +24,23 @@ func (source *Ask) ProcessDomain(ctx context.Context, domain string) <-chan *cor
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "ask"
-
 	results := make(chan *core.Result)
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(askLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		for currentPage := 1; currentPage <= 750; currentPage++ {
 			url := "https://www.ask.com/web?q=site%3A" + domain + "+-www.+&page=" + strconv.Itoa(currentPage) + "&o=0&l=dir&qsrc=998&qo=pagination"
 			req, err := http.NewRequest(http.MethodGet, url, nil)
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(askLabel, nil, err))
 				return
 			}
 
@@ -54,13 +49,13 @@ func (source *Ask) ProcessDomain(ctx context.Context, domain string) <-chan *cor
 
 			resp, err := core.HTTPClient.Do(req)
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(askLabel, nil, err))
 				return
 			}
 
 			if resp.StatusCode != 200 {
 				resp.Body.Close()
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+				sendResultWithContext(ctx, results, core.NewResult(askLabel, nil, errors.New(resp.Status)))
 				return
 			}
 
@@ -75,11 +70,11 @@ func (source *Ask) ProcessDomain(ctx context.Context, domain string) <-chan *cor
 				}
 				if strings.Contains(scanner.Text(), "No results for:") {
 					resp.Body.Close()
-					sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New("rate limited on page "+strconv.Itoa(currentPage))))
+					sendResultWithContext(ctx, results, core.NewResult(askLabel, nil, errors.New("rate limited on page "+strconv.Itoa(currentPage))))
 					return
 				}
-				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+				if str := domainExtractor(scanner.Bytes()); str != "" {
+					if !sendResultWithContext(ctx, results, core.NewResult(askLabel, str, nil)) {
 						resp.Body.Close()
 						return
 					}
@@ -90,7 +85,7 @@ func (source *Ask) ProcessDomain(ctx context.Context, domain string) <-chan *cor
 
 			if err != nil {
 				resp.Body.Close()
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(askLabel, nil, err))
 				return
 			}
 
