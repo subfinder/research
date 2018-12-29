@@ -22,30 +22,24 @@ func (source *Baidu) ProcessDomain(ctx context.Context, domain string) <-chan *c
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "baidu"
-
 	results := make(chan *core.Result)
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(baiduLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		for currentPage := 1; currentPage <= 750; currentPage++ {
 			url := "https://www.baidu.com/s?rn=10&pn=" + strconv.Itoa(currentPage) + "&wd=site%3A" + domain + "+-www.+&oq=site%3A" + domain + "+-www.+"
 			req, err := http.NewRequest(http.MethodGet, url, nil)
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(baiduLabel, nil, err))
 				return
 			}
 
@@ -54,13 +48,13 @@ func (source *Baidu) ProcessDomain(ctx context.Context, domain string) <-chan *c
 
 			resp, err := core.HTTPClient.Do(req)
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(baiduLabel, nil, err))
 				return
 			}
 
 			if resp.StatusCode != 200 {
 				resp.Body.Close()
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+				sendResultWithContext(ctx, results, core.NewResult(baiduLabel, nil, errors.New(resp.Status)))
 				return
 			}
 
@@ -73,8 +67,10 @@ func (source *Baidu) ProcessDomain(ctx context.Context, domain string) <-chan *c
 					return
 				}
 
-				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+				str := domainExtractor(scanner.Bytes())
+
+				if str != "" {
+					if !sendResultWithContext(ctx, results, core.NewResult(baiduLabel, str, nil)) {
 						resp.Body.Close()
 						return
 					}
@@ -86,7 +82,7 @@ func (source *Baidu) ProcessDomain(ctx context.Context, domain string) <-chan *c
 			err = scanner.Err()
 
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(baiduLabel, nil, err))
 				return
 			}
 		}
