@@ -76,44 +76,40 @@ func (source *Riddler) ProcessDomain(ctx context.Context, domain string) <-chan 
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "riddler"
-
 	results := make(chan *core.Result)
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(riddlerLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
 		// check if only email was given
 		if source.Email != "" && source.Password == "" {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New("given email, but no password")))
+			sendResultWithContext(ctx, results, core.NewResult(riddlerLabel, nil, errors.New("given email, but no password")))
 		}
 
 		// check if only password was given
 		if source.Email == "" && source.Password != "" {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New("given password, but no email")))
+			sendResultWithContext(ctx, results, core.NewResult(riddlerLabel, nil, errors.New("given password, but no email")))
 		}
 
 		// check if source needs to be authenticated
 		if source.APIToken == "" && source.Email != "" && source.Password != "" {
 			_, err := source.Authenticate(ctx)
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(riddlerLabel, nil, err))
 				return
 			}
 		}
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		var resp *http.Response
+		var err error
 
 		if source.APIToken != "" {
 			query := strings.NewReader(`{"query": "pld:` + domain + `", "output": "host", "limit": 500}`)
@@ -128,13 +124,13 @@ func (source *Riddler) ProcessDomain(ctx context.Context, domain string) <-chan 
 
 			resp, err := core.HTTPClient.Do(req)
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(riddlerLabel, nil, err))
 				return
 			}
 			defer resp.Body.Close()
 
 			if resp.StatusCode != 200 {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+				sendResultWithContext(ctx, results, core.NewResult(riddlerLabel, nil, errors.New(resp.Status)))
 				return
 			}
 
@@ -142,13 +138,14 @@ func (source *Riddler) ProcessDomain(ctx context.Context, domain string) <-chan 
 
 			err = json.NewDecoder(resp.Body).Decode(&hostResponse)
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(riddlerLabel, nil, err))
 				return
 			}
 
 			for _, r := range hostResponse {
-				for _, str := range domainExtractor.FindAllString(r.Host, -1) {
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+				str := domainExtractor([]byte(r.Host))
+				if str != "" {
+					if !sendResultWithContext(ctx, results, core.NewResult(riddlerLabel, str, nil)) {
 						return
 					}
 				}
@@ -160,21 +157,22 @@ func (source *Riddler) ProcessDomain(ctx context.Context, domain string) <-chan 
 			// not authenticated
 			resp, err = core.HTTPClient.Get("https://riddler.io/search/exportcsv?q=pld:" + domain)
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(riddlerLabel, nil, err))
 				return
 			}
 			defer resp.Body.Close()
 
 			if resp.StatusCode != 200 {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+				sendResultWithContext(ctx, results, core.NewResult(riddlerLabel, nil, errors.New(resp.Status)))
 				return
 			}
 
 			scanner := bufio.NewScanner(resp.Body)
 
 			for scanner.Scan() {
-				for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-					if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+				str := domainExtractor(scanner.Bytes())
+				if str != "" {
+					if !sendResultWithContext(ctx, results, core.NewResult(riddlerLabel, str, nil)) {
 						return
 					}
 				}
@@ -183,7 +181,7 @@ func (source *Riddler) ProcessDomain(ctx context.Context, domain string) <-chan 
 			err = scanner.Err()
 
 			if err != nil {
-				sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+				sendResultWithContext(ctx, results, core.NewResult(riddlerLabel, nil, err))
 				return
 			}
 
