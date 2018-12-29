@@ -39,14 +39,19 @@ var zeroStr string
 var dotChar = []byte(".")[0]
 var starChar = []byte("*")[0]
 var percChar = []byte("%")[0]
+var dotStr = "."
 
 // NewSingleSubdomainExtractor creates a new extractor that looks for
 // only one subdomain.
 func NewSingleSubdomainExtractor(domain string) func([]byte) string {
-	domain = "." + domain
+	domain = dotStr + domain
 	domainLen := len(domain)
 	domainLenMinusOne := domainLen - 1
 	lastByteInDomain := domain[domainLenMinusOne]
+
+	indexValue := domainLenMinusOne
+	foundBuffer := []byte{}
+	foundSomethingInteresting := false
 
 	return func(input []byte) string {
 		if len(input) <= domainLen {
@@ -54,9 +59,9 @@ func NewSingleSubdomainExtractor(domain string) func([]byte) string {
 		}
 
 		// scoped variables
-		foundSomethingInteresting := false
-		indexValue := domainLenMinusOne
-		foundBuffer := []byte{}
+		foundSomethingInteresting = false
+		indexValue = domainLenMinusOne
+		foundBuffer = foundBuffer[:0]
 
 		reader := readReverseBytes(input)
 
@@ -96,7 +101,7 @@ func NewSingleSubdomainExtractor(domain string) func([]byte) string {
 							foundBuffer = foundBuffer[:len(foundBuffer)-1]
 							// remove shortfind
 							if len(foundBuffer) == domainLen-1 {
-								foundBuffer = []byte{}
+								foundBuffer = foundBuffer[:0]
 							}
 							break
 						} else if v == dotChar && foundBuffer[len(foundBuffer)-1] == starChar {
@@ -127,10 +132,14 @@ func NewSingleSubdomainExtractor(domain string) func([]byte) string {
 // NewMultiSubdomainExtractor creates a new extractor that looks for
 // as many subdomains as it can find.
 func NewMultiSubdomainExtractor(domain string) func([]byte) []string {
-	domain = "." + domain
+	domain = dotStr + domain
 	domainLen := len(domain)
 	domainLenMinusOne := domainLen - 1
 	lastByteInDomain := domain[domainLenMinusOne]
+
+	indexValue := domainLenMinusOne
+	foundBuffer := []byte{}
+	foundSomethingInteresting := false
 
 	return func(input []byte) (results []string) {
 		if len(input) <= domainLen {
@@ -138,9 +147,9 @@ func NewMultiSubdomainExtractor(domain string) func([]byte) []string {
 		}
 
 		// scoped variables
-		foundSomethingInteresting := false
-		indexValue := domainLenMinusOne
-		foundBuffer := []byte{}
+		foundSomethingInteresting = false
+		indexValue = domainLenMinusOne
+		foundBuffer = foundBuffer[:0]
 
 		reader := readReverseBytes(input)
 
@@ -180,7 +189,7 @@ func NewMultiSubdomainExtractor(domain string) func([]byte) []string {
 							foundBuffer = foundBuffer[:len(foundBuffer)-1]
 							// remove shortfind
 							if len(foundBuffer) == domainLen-1 {
-								foundBuffer = []byte{}
+								foundBuffer = foundBuffer[:0]
 							}
 							break
 						} else if v == dotChar && foundBuffer[len(foundBuffer)-1] == starChar {
@@ -200,11 +209,15 @@ func NewMultiSubdomainExtractor(domain string) func([]byte) []string {
 						results = append(results, string(reverseBytes(foundBuffer)))
 					}
 					foundSomethingInteresting = false
-					foundBuffer = []byte{}
+					foundBuffer = foundBuffer[:0]
 					indexValue = domainLenMinusOne
 					continue
 				}
 			}
+
+			foundSomethingInteresting = false
+			foundBuffer = foundBuffer[:0]
+			indexValue = domainLenMinusOne
 			continue
 		}
 	}
