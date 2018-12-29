@@ -66,24 +66,18 @@ func (source *DNSDumpster) ProcessDomain(ctx context.Context, domain string) <-c
 		source.lock = defaultLockValue()
 	}
 
-	var resultLabel = "dnsdumpster"
-
 	results := make(chan *core.Result)
 
 	go func(domain string, results chan *core.Result) {
 		defer close(results)
 
 		if err := source.lock.Acquire(ctx, 1); err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(dnsdumpsterLabel, nil, err))
 			return
 		}
 		defer source.lock.Release(1)
 
-		domainExtractor, err := core.NewSubdomainExtractor(domain)
-		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
-			return
-		}
+		domainExtractor := core.NewSingleSubdomainExtractor(domain)
 
 		// CookieJar to hold csrf cookie
 		var gCookies []*http.Cookie
@@ -93,14 +87,14 @@ func (source *DNSDumpster) ProcessDomain(ctx context.Context, domain string) <-c
 		// Make a http request to DNSDumpster
 		resp, gCookies, err := getHTTPCookieResponse("https://dnsdumpster.com", gCookies, 20)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(dnsdumpsterLabel, nil, err))
 			return
 		}
 
 		// Get the response body
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(dnsdumpsterLabel, nil, err))
 			return
 		}
 
@@ -121,7 +115,7 @@ func (source *DNSDumpster) ProcessDomain(ctx context.Context, domain string) <-c
 
 		req, err := http.NewRequest("POST", "https://dnsdumpster.com", strings.NewReader(form.Encode()))
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(dnsdumpsterLabel, nil, err))
 			return
 		}
 
@@ -137,21 +131,25 @@ func (source *DNSDumpster) ProcessDomain(ctx context.Context, domain string) <-c
 
 		resp, err = core.HTTPClient.Do(req)
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(dnsdumpsterLabel, nil, err))
 			return
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, errors.New(resp.Status)))
+			sendResultWithContext(ctx, results, core.NewResult(dnsdumpsterLabel, nil, errors.New(resp.Status)))
 			return
 		}
 
 		scanner := bufio.NewScanner(resp.Body)
 
+		scanner.Split(bufio.ScanWords)
+
+		// TODO: look into more
 		for scanner.Scan() {
-			for _, str := range domainExtractor.FindAllString(scanner.Text(), -1) {
-				if !sendResultWithContext(ctx, results, core.NewResult(resultLabel, str, nil)) {
+			str := domainExtractor(scanner.Bytes())
+			if str != "" {
+				if !sendResultWithContext(ctx, results, core.NewResult(dnsdumpsterLabel, str, nil)) {
 					return
 				}
 			}
@@ -160,7 +158,7 @@ func (source *DNSDumpster) ProcessDomain(ctx context.Context, domain string) <-c
 		err = scanner.Err()
 
 		if err != nil {
-			sendResultWithContext(ctx, results, core.NewResult(resultLabel, nil, err))
+			sendResultWithContext(ctx, results, core.NewResult(dnsdumpsterLabel, nil, err))
 			return
 		}
 
