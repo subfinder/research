@@ -16,17 +16,17 @@ func TestBing(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	for result := range source.ProcessDomain(ctx, domain) {
-		fmt.Println(result)
+	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
+		fmt.Println(result.Success)
 		results = append(results, result)
 		// Not waiting around to iterate all the possible pages.
-		if len(results) >= 20 {
+		if len(results) >= 10 {
 			cancel()
 		}
 	}
 
-	if !(len(results) >= 20) {
-		t.Errorf("expected more than 20 result(s), got '%v'", len(results))
+	if !(len(results) > 10) {
+		t.Errorf("expected more than 10 result(s), got '%v'", len(results))
 	}
 }
 
