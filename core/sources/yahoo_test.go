@@ -27,7 +27,7 @@ func TestYahoo(t *testing.T) {
 	fmt.Println(results)
 
 	if !(len(results) >= 10) {
-		t.Errorf("expected more than 20 result(s), got '%v'", len(results))
+		t.Errorf("expected more than 10 result(s), got '%v'", len(results))
 	}
 }
 

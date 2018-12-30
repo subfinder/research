@@ -17,7 +17,7 @@ func TestBaidu(t *testing.T) {
 	defer cancel()
 
 	for result := range source.ProcessDomain(ctx, domain) {
-		t.Log(result)
+		//t.Log(result)
 		results = append(results, result.Success)
 		// Not waiting around to iterate all the possible pages.
 		if len(results) >= 20 {

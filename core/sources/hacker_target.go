@@ -73,12 +73,12 @@ func (source *HackerTarget) ProcessDomain(ctx context.Context, domain string) <-
 		// read response body, extracting subdomains
 		scanner := bufio.NewScanner(resp.Body)
 		for scanner.Scan() {
-			str := strings.Split(scanner.Text(), ",")[0]
-			if strings.Contains(str, "API count exceeded") {
-				sendResultWithContext(ctx, results, core.NewResult("hackertarget", nil, errors.New(str)))
+			if strings.Contains(scanner.Text(), "API count exceeded - Increase Quota with Membership") {
+				err := errors.New(scanner.Text())
+				sendResultWithContext(ctx, results, core.NewResult("hackertarget", nil, err))
 				return
 			}
-			str = domainExtractor([]byte(str))
+			str := domainExtractor([]byte(strings.Split(scanner.Text(), ",")[0]))
 			if str != "" {
 				if !sendResultWithContext(ctx, results, core.NewResult(hackertargetLabel, str, nil)) {
 					return

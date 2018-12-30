@@ -17,7 +17,7 @@ func TestHackerTarget(t *testing.T) {
 	defer cancel()
 
 	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
-		results = append(results, result.Success)
+		results = append(results, result)
 	}
 
 	fmt.Println(results)

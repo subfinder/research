@@ -68,11 +68,13 @@ func (source *Ask) ProcessDomain(ctx context.Context, domain string) <-chan *cor
 					resp.Body.Close()
 					return
 				}
+
 				if strings.Contains(scanner.Text(), "No results for:") {
 					resp.Body.Close()
 					sendResultWithContext(ctx, results, core.NewResult(askLabel, nil, errors.New("rate limited on page "+strconv.Itoa(currentPage))))
 					return
 				}
+
 				if str := domainExtractor(scanner.Bytes()); str != "" {
 					if !sendResultWithContext(ctx, results, core.NewResult(askLabel, str, nil)) {
 						resp.Body.Close()

@@ -25,7 +25,7 @@ func TestBing(t *testing.T) {
 		}
 	}
 
-	if !(len(results) > 10) {
+	if !(len(results) >= 10) {
 		t.Errorf("expected more than 10 result(s), got '%v'", len(results))
 	}
 }

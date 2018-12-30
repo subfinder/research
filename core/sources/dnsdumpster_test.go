@@ -10,7 +10,7 @@ import (
 )
 
 func TestDNSDumpster(t *testing.T) {
-	domain := "google.com"
+	domain := "apple.com"
 	source := DNSDumpster{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

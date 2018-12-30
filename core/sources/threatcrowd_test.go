@@ -10,7 +10,7 @@ import (
 )
 
 func TestThreatCrowd(t *testing.T) {
-	domain := "apple.com"
+	domain := "goole.com"
 	source := ThreatCrowd{}
 	results := []*core.Result{}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

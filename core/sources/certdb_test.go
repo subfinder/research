@@ -10,7 +10,7 @@ import (
 )
 
 func TestCertDB(t *testing.T) {
-	domain := "emich.edu"
+	domain := "apple.com"
 	source := CertDB{}
 	results := []interface{}{}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)

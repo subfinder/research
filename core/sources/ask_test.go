@@ -17,6 +17,9 @@ func TestAsk(t *testing.T) {
 	defer cancel()
 
 	for result := range core.UniqResults(source.ProcessDomain(ctx, domain)) {
+		if result.IsFailure() {
+			t.Error(result.Failure)
+		}
 		results = append(results, result.Success)
 	}
 

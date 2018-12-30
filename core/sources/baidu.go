@@ -58,18 +58,25 @@ func (source *Baidu) ProcessDomain(ctx context.Context, domain string) <-chan *c
 				return
 			}
 
+			minLineLen := len(domain) + 2
+
 			scanner := bufio.NewScanner(resp.Body)
 
-			scanner.Split(bufio.ScanWords)
+			//scanner.Split(bufio.ScanWords)
 
 			for scanner.Scan() {
 				if ctx.Err() != nil {
 					return
 				}
 
+				if len(scanner.Bytes()) < minLineLen {
+					continue
+				}
+
 				str := domainExtractor(scanner.Bytes())
 
 				if str != "" {
+					//fmt.Println(scanner.Text())
 					if !sendResultWithContext(ctx, results, core.NewResult(baiduLabel, str, nil)) {
 						resp.Body.Close()
 						return
