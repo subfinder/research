@@ -14,7 +14,6 @@ var dnsCache = dnscache.New(5 * time.Minute)
 // HTTPClient is a reusable component that can be used in sources.
 var HTTPClient = &http.Client{
 	Transport: &http.Transport{
-		MaxIdleConnsPerHost: 64,
 		Dial: func(network string, address string) (net.Conn, error) {
 			separator := strings.LastIndex(address, ":")
 			ip, err := dnsCache.FetchOneString(address[:separator])
@@ -27,7 +26,8 @@ var HTTPClient = &http.Client{
 		//	Timeout:   15 * time.Second,
 		//	KeepAlive: 60 * time.Second,
 		//}).Dial,
-		MaxIdleConns: 100,
+		MaxIdleConns:        1024,
+		MaxIdleConnsPerHost: 2,
 		//MaxIdleConnsPerHost: 2,
 		//MaxConnsPerHost:       1,
 		TLSHandshakeTimeout:   10 * time.Second,
